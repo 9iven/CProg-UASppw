@@ -3,16 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CP Recommender & Tracker</title>
-    <link rel="stylesheet" href="style.css">
+    <title>CProg Viewer - Competitive Programming Analytics</title>
+    <link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body>
-    <div class="hero-section">
-        <div class="hero-content">
-            <h1>Tingkatkan Performa Pemrograman Kompetitif Anda</h1>
-            <p>Lacak statistik Codeforces dan LeetCode secara terpusat. Dapatkan rekomendasi soal yang presisi berdasarkan konversi tingkat kesulitan untuk mengoptimalkan peningkatan kapabilitas Anda.</p>
-            <a href="register.php" class="cta-button">Mulai Analisis</a>
-        </div>
-    </div>
+
+    <main class="hero-section">
+        <h1 class="hero-title">Tingkatkan <span class="text-accent-yellow">Performa</span> Kode Anda</h1>
+        <p class="hero-subtitle">
+            Platform analitik komprehensif untuk melacak statistik dari Codeforces, LeetCode, dan platform online judge lainnya. 
+            Dapatkan rekomendasi soal yang dioptimalkan secara spesifik berdasarkan metrik rating Anda saat ini.
+        </p>
+        
+        <a href="register.php" class="cta-button">Mulai Analisis Sekarang</a>
+    </main>
+
 </body>
 </html>
