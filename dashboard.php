@@ -52,7 +52,13 @@ if (mysqli_num_rows($result_cf) > 0) {
                 <p class="rating-value text-accent-blue"><?php echo $cf_rating; ?></p>
                 <span class="sub-text"><?php echo $cf_status; ?></span>
             </div>
-            </section>
+            
+            <div class="summary-card">
+                <h3>Custom Problems</h3>
+                <p class="rating-value text-accent-yellow">CRUD</p>
+                <a href="manage_problems.php" class="sub-text" style="color: #facc15; text-decoration: none;">Kelola Soal Mandiri &#8594;</a>
+            </div>
+        </section>
 
         <section class="dashboard-grid">
             <div class="grid-card">
