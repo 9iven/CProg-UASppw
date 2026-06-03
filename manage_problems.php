@@ -97,12 +97,12 @@ $problems_result = mysqli_query($conn, $problems_query);
 
                     <div class="form-group" style="grid-column: span 2;">
                         <label>Judul Soal</label>
-                        <input type="text" name="title" class="form-control" placeholder="Nama Soal" required>
+                        <input type="text" name="title" id="titleInput" class="form-control" placeholder="Nama Soal" required>
                     </div>
 
                     <div class="form-group" style="grid-column: span 2;">
                         <label>Tautan Soal (URL)</label>
-                        <input type="url" name="problem_url" class="form-control" placeholder="https://..." required>
+                        <input type="url" name="problem_url" id="urlInput" class="form-control" placeholder="https://..." required>
                     </div>
 
                     <button type="submit" class="btn-submit" style="grid-column: span 2;">Simpan Soal</button>
@@ -149,5 +149,33 @@ $problems_result = mysqli_query($conn, $problems_query);
         </section>
     </main>
 
+    <script src="assets/js/script.js"></script>
+    
+    <script>
+        const urlInput = document.getElementById('urlInput');
+        const titleInput = document.getElementById('titleInput');
+
+        urlInput.addEventListener('blur', function() {
+            const url = this.value;
+            if (url && !titleInput.value) { // Hanya melakukan auto-fill jika judul masih kosong
+                titleInput.placeholder = "Mengambil data otomatis...";
+                
+                fetch('fetch_title.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url: url })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        titleInput.value = data.title;
+                    } else {
+                        titleInput.placeholder = "Gagal mengambil judul, silakan isi manual.";
+                    }
+                })
+                .catch(err => console.error('Fetch error:', err));
+            }
+        });
+    </script>
 </body>
 </html>

@@ -62,6 +62,61 @@ if ($http_code == 200 && $response) {
         $history_query = "INSERT INTO rating_history (user_handle_id, rating) VALUES ($handle_id, $current_rating)";
         mysqli_query($conn, $history_query);
         
+        // ====================================================================
+        // BLOK KODE 5 (API STATUS/SOLVED PROBLEMS) DIMASUKKAN DI SINI
+        // ====================================================================
+        
+        // 5. Menarik riwayat Solved Problems dari Codeforces
+        // Membatasi 50 submission terakhir agar peladen lokal tidak kehabisan memori
+        $status_url = "https://codeforces.com/api/user.status?handle=" . urlencode($cf_username) . "&from=1&count=50";
+        
+        $ch2 = curl_init();
+        curl_setopt($ch2, CURLOPT_URL, $status_url);
+        curl_setopt($ch2, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch2, CURLOPT_SSL_VERIFYPEER, false);
+        $status_response = curl_exec($ch2);
+        $status_code = curl_getinfo($ch2, CURLINFO_HTTP_CODE);
+        curl_close($ch2);
+
+        if ($status_code == 200 && $status_response) {
+            $status_data = json_decode($status_response, true);
+            
+            if ($status_data['status'] === 'OK') {
+                foreach ($status_data['result'] as $submission) {
+                    // Hanya memproses submission yang berhasil (Accepted)
+                    if ($submission['verdict'] === 'OK') {
+                        $prob = $submission['problem'];
+                        $prob_name = mysqli_real_escape_string($conn, $prob['name']);
+                        // URL format Codeforces: https://codeforces.com/contest/{contestId}/problem/{index}
+                        $contest_id = isset($prob['contestId']) ? $prob['contestId'] : 0;
+                        $prob_index = isset($prob['index']) ? $prob['index'] : '';
+                        $prob_url = "https://codeforces.com/contest/$contest_id/problem/$prob_index";
+                        $prob_rating = isset($prob['rating']) ? (int)$prob['rating'] : 800; // Default 800 jika unrated problem
+                        
+                        // Cek apakah soal ini sudah ada di bank soal (tabel problems)
+                        $check_prob = "SELECT id FROM problems WHERE platform_id = 1 AND title = '$prob_name'";
+                        $res_prob = mysqli_query($conn, $check_prob);
+                        
+                        if (mysqli_num_rows($res_prob) > 0) {
+                            $prob_row = mysqli_fetch_assoc($res_prob);
+                            $db_problem_id = $prob_row['id'];
+                        } else {
+                            // Insert soal baru ke tabel problems (created_by = NULL karena dari API)
+                            $ins_prob = "INSERT INTO problems (platform_id, title, problem_url, equivalent_rating, is_custom) 
+                                         VALUES (1, '$prob_name', '$prob_url', $prob_rating, FALSE)";
+                            mysqli_query($conn, $ins_prob);
+                            $db_problem_id = mysqli_insert_id($conn);
+                        }
+                        
+                        // Masukkan relasi ke solved_problems menggunakan INSERT IGNORE untuk mencegah duplikasi
+                        $ins_solved = "INSERT IGNORE INTO solved_problems (user_id, problem_id) VALUES ($user_id, $db_problem_id)";
+                        mysqli_query($conn, $ins_solved);
+                    }
+                }
+            }
+        }
+        // ====================================================================
+
     } else {
         $_SESSION['error_msg'] = "Username Codeforces tidak ditemukan pada API.";
     }
