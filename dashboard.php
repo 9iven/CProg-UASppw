@@ -11,11 +11,10 @@ require 'config.php';
 $user_id = $_SESSION['user_id'];
 $email = $_SESSION['email'];
 
-// Menarik data handle dan metrik rating Codeforces dari database (jika sudah dihubungkan)
+// 1. Menarik data handle dan metrik Codeforces
 $cf_rating = 0;
 $cf_status = "Belum dihubungkan";
 
-// Menyesuaikan dengan ID platform Codeforces yang di-seed pada tabel platforms (ID = 1)
 $query_cf = "SELECT username, current_rating FROM user_handles WHERE user_id = $user_id AND platform_id = 1";
 $result_cf = mysqli_query($conn, $query_cf);
 
@@ -24,6 +23,20 @@ if (mysqli_num_rows($result_cf) > 0) {
     $cf_rating = $row['current_rating'];
     $cf_status = htmlspecialchars($row['username']);
 }
+
+// 2. Logika Algoritma Rekomendasi
+// Jika user belum memiliki rating (0), target default adalah 800. Jika ada, batas atas adalah +200 poin.
+$target_min = $cf_rating > 0 ? $cf_rating : 800;
+$target_max = $target_min + 200;
+
+// Query untuk mencari soal dalam rentang rating yang BELUM diselesaikan oleh user
+$reco_query = "SELECT p.title, p.problem_url, p.equivalent_rating, pl.name AS platform_name 
+               FROM problems p 
+               JOIN platforms pl ON p.platform_id = pl.id 
+               WHERE p.equivalent_rating BETWEEN $target_min AND $target_max 
+               AND p.id NOT IN (SELECT problem_id FROM solved_problems WHERE user_id = $user_id)
+               ORDER BY RAND() LIMIT 5";
+$reco_result = mysqli_query($conn, $reco_query);
 ?>
 
 <!DOCTYPE html>
@@ -73,7 +86,6 @@ if (mysqli_num_rows($result_cf) > 0) {
                 </form>
 
                 <?php 
-                // Menampilkan notifikasi jika ada galat saat sinkronisasi
                 if(isset($_SESSION['error_msg'])) {
                     echo '<div class="alert-error" style="margin-top: 15px;">' . $_SESSION['error_msg'] . '</div>';
                     unset($_SESSION['error_msg']);
@@ -83,10 +95,34 @@ if (mysqli_num_rows($result_cf) > 0) {
 
             <div class="grid-card">
                 <h3>Rekomendasi Soal Teroptimasi</h3>
-                <p class="card-desc">Berdasarkan rating Anda saat ini, berikut adalah soal yang disarankan:</p>
-                <div class="placeholder-list">
-                    <p>Fungsionalitas algoritma rekomendasi akan dimuat pada iterasi berikutnya.</p>
-                </div>
+                <p class="card-desc">Target latihan: <strong><?php echo $target_min; ?> - <?php echo $target_max; ?></strong> <em>rating</em>.</p>
+                
+                <?php if(mysqli_num_rows($reco_result) > 0): ?>
+                    <div style="overflow-x: auto;">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Soal</th>
+                                    <th>Platform</th>
+                                    <th>Rating</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php while($reco = mysqli_fetch_assoc($reco_result)): ?>
+                                <tr>
+                                    <td><a href="<?php echo htmlspecialchars($reco['problem_url']); ?>" target="_blank" class="text-accent-yellow" style="text-decoration: none;"><?php echo htmlspecialchars($reco['title']); ?></a></td>
+                                    <td><?php echo htmlspecialchars($reco['platform_name']); ?></td>
+                                    <td><?php echo $reco['equivalent_rating']; ?></td>
+                                </tr>
+                                <?php endwhile; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                <?php else: ?>
+                    <div class="placeholder-list">
+                        <p>Belum ada soal dalam rentang <em>rating</em> ini di repositori yang belum Anda selesaikan. Silakan tambahkan soal melalui menu Kelola Soal Mandiri.</p>
+                    </div>
+                <?php endif; ?>
             </div>
         </section>
 
