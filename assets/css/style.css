@@ -341,3 +341,209 @@ body {
     margin-bottom: 20px;
     font-size: 0.9rem;
 }
+
+/* =========================================================
+   TAMBAHAN DESAIN KHUSUS (LOGO & OSU! PROFILE BANNER)
+   ========================================================= */
+
+/* Ukuran Logo Gambar Custom (Dioptimalkan untuk gambar 1:1) */
+.custom-logo-img {
+    height: 38px; /* Mengunci tinggi agar proporsional dengan teks header */
+    width: 38px;  /* Mengunci lebar karena gambar asli Anda berbentuk persegi 400x400 */
+    object-fit: contain; /* Memastikan gambar tidak terpotong atau distorsi */
+    margin-right: 15px;
+    border-radius: 6px; /* Opsional: memberikan efek sudut sedikit melengkung */
+}
+   
+/* Logo 3 Garis (Magenta, Cyan, Yellow) */
+.logo-slash {
+    font-weight: 900;
+    font-size: 1.6rem;
+    margin-right: -4px;
+    font-style: italic;
+}
+.slash-m { color: #ff007f; text-shadow: 0 0 10px #ff007f; }
+.slash-c { color: #00f0ff; text-shadow: 0 0 10px #00f0ff; }
+.slash-y { color: #facc15; text-shadow: 0 0 10px #facc15; }
+
+/* Komponen Profile Banner */
+.profile-banner {
+    position: relative;
+    background-color: #1e1e1e;
+    border: 1px solid #333333;
+    border-radius: 12px;
+    margin-bottom: 30px;
+    overflow: hidden;
+    min-height: 140px;
+}
+
+/* Background gradient blur ala osu! */
+.profile-bg {
+    display: none; /* Removed as per user preference for solid backgrounds */
+}
+
+.profile-content {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    width: 100%;
+    padding: 25px 30px;
+    align-items: center;
+    gap: 25px;
+}
+
+/* Avatar slot disiapkan untuk fitur upload image */
+.profile-avatar {
+    width: 90px;
+    height: 90px;
+    background-color: #2a2a2a;
+    border: 2px solid #555;
+    border-radius: 18px; /* Sudut melengkung halus ala osu! */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.profile-info {
+    flex-grow: 1;
+}
+
+.profile-info h2 {
+    font-size: 1.8rem;
+    color: #ffffff;
+    margin-bottom: 2px;
+    line-height: 1.2;
+}
+
+.profile-info p {
+    color: #a1a1aa;
+    font-size: 0.95rem;
+    margin-bottom: 12px;
+}
+
+/* Rank Badge dengan pewarnaan dinamis */
+.rank-badge {
+    display: inline-block;
+    padding: 5px 14px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    color: #ffffff;
+}
+.tier-unrated { background-color: #555555; }
+.tier-newbie { background-color: #808080; }
+.tier-pupil { background-color: #008000; }
+.tier-specialist { background-color: #03a89e; }
+.tier-grandmaster { background-color: #ff0000; box-shadow: 0 0 10px rgba(255, 0, 0, 0.6); }
+
+/* Kotak statistik */
+.profile-stats {
+    display: flex;
+    gap: 15px;
+}
+
+.stat-box {
+    background-color: rgba(0, 0, 0, 0.3);
+    border: 1px solid #333333;
+    border-radius: 8px;
+    padding: 15px 20px;
+    text-align: center;
+    min-width: 130px;
+}
+
+.stat-title {
+    display: block;
+    font-size: 0.75rem;
+    color: #888888;
+    font-weight: 700;
+    margin-bottom: 5px;
+}
+
+.stat-value {
+    font-size: 1.5rem;
+    font-weight: 900;
+    display: block;
+}
+
+/* Agar responsif di perangkat mobile */
+@media (max-width: 768px) {
+    .profile-content {
+        flex-direction: column;
+        text-align: center;
+    }
+    .profile-stats {
+        width: 100%;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+}
+
+/* --- Modal Styles --- */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(10, 10, 10, 0.8);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    justify-content: center;
+    align-items: center;
+    transition: all 0.3s ease;
+}
+
+.modal-content {
+    background-color: #1a1a1a;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 30px;
+    width: 90%;
+    max-width: 550px;
+    border-radius: 16px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.05);
+    position: relative;
+    animation: modalFadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.close-modal {
+    position: absolute;
+    right: 24px;
+    top: 20px;
+    color: #888;
+    font-size: 24px;
+    font-weight: normal;
+    cursor: pointer;
+    transition: color 0.2s, transform 0.2s, background-color 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background-color: rgba(255, 255, 255, 0.03);
+}
+
+.close-modal:hover {
+    color: #ff007f;
+    transform: rotate(90deg);
+    background-color: rgba(255, 255, 255, 0.08);
+}
+
+@keyframes modalFadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.95) translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
