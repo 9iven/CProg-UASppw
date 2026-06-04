@@ -2,7 +2,8 @@
 session_start();
 require 'config.php';
 
-// Validasi akses otorisasi dan metode HTTP POST
+// --- VALIDASI OTORISASI & METODE AKSES ---
+// Memastikan user sudah login dan mengakses halaman ini hanya via form POST
 if (!isset($_SESSION['user_id']) || $_SERVER["REQUEST_METHOD"] != "POST") {
     header("Location: settings.php");
     exit;
@@ -10,48 +11,53 @@ if (!isset($_SESSION['user_id']) || $_SERVER["REQUEST_METHOD"] != "POST") {
 
 $user_id = $_SESSION['user_id'];
 $platform_id = (int)$_POST['platform_id'];
-$handle_username = trim($_POST['cf_username']); // Input name dari form settings
-$safe_username = mysqli_real_escape_string($conn, $handle_username);
+$handle_username = trim($_POST['cf_username']); // Mengambil username yang di-input user
+$safe_username = mysqli_real_escape_string($conn, $handle_username); // Mencegah celah SQL Injection
 
-// LOGIKA KHUSUS CODEFORCES (Asumsi Platform ID = 1)
+// --- LOGIKA UTAMA: SINKRONISASI PLATFORM CODEFORCES (Platform ID = 1) ---
 if ($platform_id === 1) {
+    // A. Memeriksa keberadaan user di server Codeforces menggunakan User Info API
     $api_url = "https://codeforces.com/api/user.info?handles=" . urlencode($handle_username);
 
     $ch = curl_init();
     curl_setopt($ch, CURLOPT_URL, $api_url);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); 
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true); // Supaya hasil respon tidak langsung dicetak ke layar
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); // Mematikan validasi SSL agar tidak error di server lokal
     $response = curl_exec($ch);
     $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
     curl_close($ch);
 
+    // Jika server merespon dengan sukses (HTTP 200)
     if ($http_code == 200 && $response) {
         $data = json_decode($response, true);
         
         if ($data['status'] === 'OK') {
             $user_info = $data['result'][0];
+            // Mengambil rating Codeforces user (jika belum pernah ikut kontes, default ke 0)
             $current_rating = isset($user_info['rating']) ? (int)$user_info['rating'] : 0;
 
-            // Operasi UPSERT ke tabel user_handles
+            // B. Operasi UPSERT (Insert jika belum ada, Update jika sudah ada) untuk tabel user_handles
             $check_query = "SELECT id FROM user_handles WHERE user_id = $user_id AND platform_id = 1";
             $check_result = mysqli_query($conn, $check_query);
 
             if (mysqli_num_rows($check_result) > 0) {
+                // Update username dan rating jika data handle sebelumnya sudah terdaftar
                 $row = mysqli_fetch_assoc($check_result);
                 $handle_id = $row['id'];
                 $update_query = "UPDATE user_handles SET username = '$safe_username', current_rating = $current_rating WHERE id = $handle_id";
                 mysqli_query($conn, $update_query);
             } else {
+                // Tambahkan data baru jika handle belum terdaftar
                 $insert_query = "INSERT INTO user_handles (user_id, platform_id, username, current_rating) VALUES ($user_id, 1, '$safe_username', $current_rating)";
                 mysqli_query($conn, $insert_query);
                 $handle_id = mysqli_insert_id($conn);
             }
 
-            // Merekam entri riwayat metrik
+            // C. Catat rating saat ini ke dalam tabel riwayat rating kontes (rating_history)
             $history_query = "INSERT INTO rating_history (user_handle_id, rating) VALUES ($handle_id, $current_rating)";
             mysqli_query($conn, $history_query);
             
-            // Menarik riwayat Solved Problems Codeforces
+            // D. Mengambil riwayat soal Codeforces yang diselesaikan (Solved Problems) menggunakan User Status API
             $status_url = "https://codeforces.com/api/user.status?handle=" . urlencode($handle_username) . "&from=1&count=50";
             $ch2 = curl_init();
             curl_setopt($ch2, CURLOPT_URL, $status_url);
@@ -63,18 +69,22 @@ if ($platform_id === 1) {
             if ($status_response) {
                 $status_data = json_decode($status_response, true);
                 if (isset($status_data['status']) && $status_data['status'] === 'OK') {
+                    // Iterasi setiap hasil submission dari user
                     foreach ($status_data['result'] as $submission) {
+                        // Hanya proses submission yang statusnya sukses diselesaikan ("OK" atau Accepted)
                         if ($submission['verdict'] === 'OK') {
                             $prob = $submission['problem'];
                             $prob_name = mysqli_real_escape_string($conn, $prob['name']);
                             $contest_id = isset($prob['contestId']) ? $prob['contestId'] : 0;
                             $prob_index = isset($prob['index']) ? $prob['index'] : '';
                             $prob_url = "https://codeforces.com/contest/$contest_id/problem/$prob_index";
-                            $prob_rating = isset($prob['rating']) ? (int)$prob['rating'] : 800; 
+                            $prob_rating = isset($prob['rating']) ? (int)$prob['rating'] : 800; // Default rating ke 800 jika tidak terdefinisi
                             
+                            // Ambil timestamp dari server Codeforces saat soal diselesaikan
                             $solved_timestamp = isset($submission['creationTimeSeconds']) ? (int)$submission['creationTimeSeconds'] : time();
                             $solved_date = date('Y-m-d H:i:s', $solved_timestamp);
                             
+                            // Cek apakah soal ini sudah tersimpan di repositori sistem lokal
                             $check_prob = "SELECT id FROM problems WHERE platform_id = 1 AND title = '$prob_name'";
                             $res_prob = mysqli_query($conn, $check_prob);
                             
@@ -82,11 +92,13 @@ if ($platform_id === 1) {
                                 $prob_row = mysqli_fetch_assoc($res_prob);
                                 $db_problem_id = $prob_row['id'];
                             } else {
+                                // Jika belum ada, daftarkan soal baru tersebut ke tabel problems
                                 $ins_prob = "INSERT INTO problems (platform_id, title, problem_url, equivalent_rating, is_custom) VALUES (1, '$prob_name', '$prob_url', $prob_rating, FALSE)";
                                 mysqli_query($conn, $ins_prob);
                                 $db_problem_id = mysqli_insert_id($conn);
                             }
                             
+                            // Tautkan soal yang diselesaikan ke akun user beserta waktu penyelesaian yang valid (solved_at)
                             $ins_solved = "INSERT INTO solved_problems (user_id, problem_id, solved_at) VALUES ($user_id, $db_problem_id, '$solved_date') ON DUPLICATE KEY UPDATE solved_at = VALUES(solved_at)";
                             mysqli_query($conn, $ins_solved);
                         }
@@ -101,8 +113,9 @@ if ($platform_id === 1) {
         $_SESSION['error_msg'] = "Gagal terhubung ke peladen Codeforces.";
     }
 } 
-// LOGIKA UNTUK PLATFORM LAIN (Tanpa API Sementara)
+// --- LOGIKA UNTUK PLATFORM LAIN (Tanpa sinkronisasi API otomatis, misal: LeetCode) ---
 else {
+    // Daftarkan username/handle ke user_handles agar bisa disimpan
     $check_query = "SELECT id FROM user_handles WHERE user_id = $user_id AND platform_id = $platform_id";
     $check_result = mysqli_query($conn, $check_query);
 
@@ -118,7 +131,7 @@ else {
     $_SESSION['success_msg'] = "Handle platform berhasil didaftarkan secara manual.";
 }
 
-// Mengalihkan kembali ke halaman Pengaturan
+// Redirect kembali ke halaman pengaturan akun
 header("Location: settings.php");
 exit;
 ?>

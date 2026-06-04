@@ -1,7 +1,9 @@
 <?php
+// --- INISIALISASI SESI & KONEKSI ---
 session_start();
 require 'config.php';
 
+// Memeriksa apakah user sudah login. Jika belum, lempar kembali ke halaman login.
 if (!isset($_SESSION['user_id'])) {
     header("Location: login.php");
     exit;
@@ -10,34 +12,37 @@ if (!isset($_SESSION['user_id'])) {
 $user_id = $_SESSION['user_id'];
 $email = $_SESSION['email'];
 
-// --- SEEDING PLATFORM LAINNYA & POST HANDLER CUSTOM PROBLEM ---
+// --- SEEDING PLATFORM LAINNYA (Platform ID = 3 secara default) ---
+// Memastikan platform penampung kustom 'Lainnya (Luar/Contest)' terdaftar di database.
 $check_other_platform = mysqli_query($conn, "SELECT id FROM platforms WHERE name = 'Lainnya (Luar/Contest)' OR id = 3");
 if (mysqli_num_rows($check_other_platform) == 0) {
     mysqli_query($conn, "INSERT IGNORE INTO platforms (id, name, has_free_api) VALUES (3, 'Lainnya (Luar/Contest)', 0)");
 }
 
-$message = '';
+$message = ''; // Pesan notifikasi sukses/error untuk dicetak ke layar
 
+// --- PROCESS POST HANDLER: MENAMBAHKAN SOAL KUSTOM ---
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action']) && $_POST['action'] == 'add_custom_problem') {
     $platform_id = (int)$_POST['platform_id'];
     $title = mysqli_real_escape_string($conn, $_POST['title']);
     $problem_url = mysqli_real_escape_string($conn, $_POST['problem_url']);
     $equivalent_rating = (int)$_POST['equivalent_rating'];
     
+    // Format tanggal penyelesaian soal (solved_at)
     $solved_at = mysqli_real_escape_string($conn, $_POST['solved_at']);
     if (empty($solved_at)) {
         $solved_at = date('Y-m-d H:i:s');
     } else {
         if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $solved_at)) {
-            $solved_at .= ' ' . date('H:i:s');
+            $solved_at .= ' ' . date('H:i:s'); // Append jam saat ini
         }
     }
     
-    // Logika Pengunggahan Gambar Bukti (Proof Image)
+    // Logika Pengunggahan Gambar Bukti (Screenshot / Proof Image)
     $proof_path = 'NULL';
     if (isset($_FILES['proof_image']) && $_FILES['proof_image']['error'] == 0) {
         if (!is_dir('uploads/proofs')) {
-            mkdir('uploads/proofs', 0777, true);
+            mkdir('uploads/proofs', 0777, true); // Buat foldernya jika belum ada
         }
         $ext = pathinfo($_FILES['proof_image']['name'], PATHINFO_EXTENSION);
         $filename = "proof_" . time() . "_" . $user_id . "." . $ext;
@@ -47,9 +52,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action']) && $_POST['a
         }
     }
     
-    // Cek duplikasi URL soal
+    // Memeriksa duplikasi URL soal agar data problems tetap unik
     $check_dup = mysqli_query($conn, "SELECT id FROM problems WHERE problem_url = '$problem_url'");
     if (mysqli_num_rows($check_dup) > 0) {
+        // Soal sudah ada, langsung tautkan ke riwayat user (solved_problems)
         $dup_row = mysqli_fetch_assoc($check_dup);
         $new_problem_id = $dup_row['id'];
         $insert_solved = "INSERT INTO solved_problems (user_id, problem_id, solved_at, proof_image) 
@@ -61,11 +67,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action']) && $_POST['a
             $_SESSION['error_msg'] = "Gagal menghubungkan soal ke riwayat Anda.";
         }
     } else {
+        // Soal belum terdaftar, simpan data soal baru ke problems
         $insert_query = "INSERT INTO problems (platform_id, title, problem_url, equivalent_rating, is_custom, created_by) 
                          VALUES ($platform_id, '$title', '$problem_url', $equivalent_rating, TRUE, $user_id)";
         
         if (mysqli_query($conn, $insert_query)) {
             $new_problem_id = mysqli_insert_id($conn);
+            // Tautkan soal yang baru dibuat ke riwayat penyelesaian user
             $insert_solved = "INSERT INTO solved_problems (user_id, problem_id, solved_at, proof_image) 
                               VALUES ($user_id, $new_problem_id, '$solved_at', $proof_path) 
                               ON DUPLICATE KEY UPDATE solved_at = VALUES(solved_at), proof_image = IF($proof_path IS NULL, proof_image, VALUES(proof_image))";
@@ -79,6 +87,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action']) && $_POST['a
     exit;
 }
 
+// Menampung pesan notifikasi dari session flash
 if (isset($_SESSION['success_msg'])) {
     $message .= "<div class='alert-success'>" . $_SESSION['success_msg'] . "</div>";
     unset($_SESSION['success_msg']);
@@ -88,27 +97,26 @@ if (isset($_SESSION['error_msg'])) {
     unset($_SESSION['error_msg']);
 }
 
-// Menarik daftar platform untuk modal
+// Menarik daftar platform untuk opsi form modal
 $modal_platforms_result = mysqli_query($conn, "SELECT id, name FROM platforms ORDER BY id ASC");
-// -------------------------------------------------------------
 
-// 1. Menarik Informasi User Meta (Termasuk Profile Picture)
-$user_display_name = explode('@', $email)[0];
+// --- 1. MENARIK INFORMASI METADATA USER ---
+$user_display_name = explode('@', $email)[0]; // Fallback nama dari email
 $profile_pic = null;
 
-$user_meta_query = "SELECT profile_picture FROM users WHERE id = $user_id";
-$meta_res = mysqli_query($conn, $user_meta_query);
+// Query gambar profil
+$meta_res = mysqli_query($conn, "SELECT profile_picture FROM users WHERE id = $user_id");
 if (mysqli_num_rows($meta_res) > 0) {
     $profile_pic = mysqli_fetch_assoc($meta_res)['profile_picture'];
 }
 
-$handles_query = "SELECT username FROM user_handles WHERE user_id = $user_id LIMIT 1";
-$handles_res = mysqli_query($conn, $handles_query);
+// Ambil username / handle aktif pertama milik user sebagai nama tampilan utama
+$handles_res = mysqli_query($conn, "SELECT username FROM user_handles WHERE user_id = $user_id LIMIT 1");
 if (mysqli_num_rows($handles_res) > 0) {
     $user_display_name = mysqli_fetch_assoc($handles_res)['username'];
 }
 
-// 2. Kalkulasi Average Rating
+// --- 2. KALKULASI RATA-RATA RATING KEMAMPUAN USER ---
 $avg_rating_query = "SELECT ROUND(AVG(p.equivalent_rating)) as avg_rating, COUNT(s.id) as total_solved 
                      FROM solved_problems s 
                      JOIN problems p ON s.problem_id = p.id 
@@ -119,7 +127,8 @@ $avg_data = mysqli_fetch_assoc($avg_result);
 $avg_solved_rating = $avg_data['avg_rating'] ? (int)$avg_data['avg_rating'] : 0;
 $total_solved_problems = $avg_data['total_solved'] ? (int)$avg_data['total_solved'] : 0;
 
-// 3. Logika Algoritma Rekomendasi
+// --- 3. LOGIKA ALGORITMA REKOMENDASI SOAL ---
+// Merekomendasikan soal secara acak yang ratingnya setara s/d +300 di atas kemampuan rata-rata user saat ini.
 $reco_result = null;
 if ($avg_solved_rating > 0) {
     $target_min = $avg_solved_rating;
@@ -134,9 +143,7 @@ if ($avg_solved_rating > 0) {
     $reco_result = mysqli_query($conn, $reco_query);
 }
 
-// =========================================================================
-// FITUR SEARCH & PAGINATION UNTUK DAFTAR AKTIVITAS TERBARU
-// =========================================================================
+// --- 4. LOGIKA PENCARIAN & PAGINASI RIWAYAT AKTIVITAS ---
 $search_solved = isset($_GET['search_solved']) ? mysqli_real_escape_string($conn, $_GET['search_solved']) : '';
 $where_solved = "WHERE s.user_id = $user_id";
 
@@ -144,16 +151,17 @@ if (!empty($search_solved)) {
     $where_solved .= " AND p.title LIKE '%$search_solved%'";
 }
 
-$limit_solved = 10;
+$limit_solved = 10; // Jumlah baris per halaman
 $page_solved = isset($_GET['page_solved']) ? (int)$_GET['page_solved'] : 1;
 if ($page_solved < 1) $page_solved = 1;
 
-$count_solved_query = "SELECT COUNT(*) as total FROM solved_problems s JOIN problems p ON s.problem_id = p.id $where_solved";
-$count_solved_result = mysqli_query($conn, $count_solved_query);
+// Hitung jumlah baris aktivitas pencarian
+$count_solved_result = mysqli_query($conn, "SELECT COUNT(*) as total FROM solved_problems s JOIN problems p ON s.problem_id = p.id $where_solved");
 $total_solved_rows = mysqli_fetch_assoc($count_solved_result)['total'];
 $total_solved_pages = ceil($total_solved_rows / $limit_solved);
 $offset_solved = ($page_solved - 1) * $limit_solved;
 
+// Ambil riwayat penyelesaian soal user terpaginasi
 $solved_query = "SELECT p.title, p.problem_url, p.equivalent_rating, pl.name AS platform_name, s.solved_at, s.proof_image 
                  FROM solved_problems s
                  JOIN problems p ON s.problem_id = p.id
@@ -162,9 +170,9 @@ $solved_query = "SELECT p.title, p.problem_url, p.equivalent_rating, pl.name AS 
                  ORDER BY s.solved_at DESC LIMIT $limit_solved OFFSET $offset_solved";
 $solved_result = mysqli_query($conn, $solved_query);
 
-// =========================================================================
-// EKSTRAKSI DATA UNTUK DUA GRAFIK
-// =========================================================================
+// --- 5. EKSTRAKSI DATA UNTUK VISUALISASI GRAFIK (CHART.JS) ---
+
+// Grafik 1: Riwayat Rating Kontes (Relatif terhadap waktu pencatatan)
 $chart1_query = "SELECT rh.rating, DATE_FORMAT(rh.recorded_at, '%d %b') as date_val, pl.name as platform_name 
                  FROM rating_history rh
                  JOIN user_handles uh ON rh.user_handle_id = uh.id
@@ -177,6 +185,7 @@ while ($row = mysqli_fetch_assoc($chart1_res)) {
     $c1_data[] = $row['rating'];
 }
 
+// Grafik 2: Tren Tingkat Kesulitan Soal Terselesaikan (Berdasarkan tanggal diselesaikan)
 $chart2_query = "SELECT p.equivalent_rating, DATE_FORMAT(s.solved_at, '%d %b') as date_val 
                  FROM solved_problems s
                  JOIN problems p ON s.problem_id = p.id

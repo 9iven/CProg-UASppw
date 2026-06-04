@@ -342,10 +342,6 @@ body {
     font-size: 0.9rem;
 }
 
-/* =========================================================
-   TAMBAHAN DESAIN KHUSUS (LOGO & OSU! PROFILE BANNER)
-   ========================================================= */
-
 /* Ukuran Logo Gambar Custom (Dioptimalkan untuk gambar 1:1) */
 .custom-logo-img {
     height: 38px; /* Mengunci tinggi agar proporsional dengan teks header */

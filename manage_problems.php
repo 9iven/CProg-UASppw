@@ -10,90 +10,112 @@ if (!isset($_SESSION['user_id'])) {
 $user_id = $_SESSION['user_id'];
 $message = '';
 
+// --- PROSES SUBMIT FORM POST (TAMBAH / HAPUS SOAL MANDIRI) ---
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    
+    // AKSI 1: Menambahkan Soal Custom Baru
     if (isset($_POST['action']) && $_POST['action'] == 'add') {
         $platform_id = (int)$_POST['platform_id'];
         $title = mysqli_real_escape_string($conn, $_POST['title']);
         $problem_url = mysqli_real_escape_string($conn, $_POST['problem_url']);
         $equivalent_rating = (int)$_POST['equivalent_rating'];
         
+        // Membaca dan memformat tanggal penyelesaian (solved_at)
         $solved_at = mysqli_real_escape_string($conn, $_POST['solved_at']);
         if (empty($solved_at)) {
-            $solved_at = date('Y-m-d H:i:s');
+            $solved_at = date('Y-m-d H:i:s'); // Fallback ke waktu server saat ini
         } else {
+            // Jika input bertipe YYYY-MM-DD, tambahkan jam saat ini agar format TIMESTAMP MySQL lengkap
             if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $solved_at)) {
                 $solved_at .= ' ' . date('H:i:s');
             }
         }
         
         // Logika Pengunggahan Gambar Bukti (Proof Image)
-        $proof_path = 'NULL';
+        $proof_path = 'NULL'; // Default jika tidak mengunggah file
         if (isset($_FILES['proof_image']) && $_FILES['proof_image']['error'] == 0) {
             $ext = pathinfo($_FILES['proof_image']['name'], PATHINFO_EXTENSION);
+            // Memberikan nama unik menggunakan timestamp dan id user
             $filename = "proof_" . time() . "_" . $user_id . "." . $ext;
             $destination = "uploads/proofs/" . $filename;
+            
+            // Pindahkan file temporary ke folder destinasi
             if (move_uploaded_file($_FILES['proof_image']['tmp_name'], $destination)) {
                 $proof_path = "'" . mysqli_real_escape_string($conn, $destination) . "'";
             }
         }
         
-        // Cek duplikasi URL soal
+        // Cek duplikasi URL soal untuk menghindari double insert pada tabel problems
         $check_dup = mysqli_query($conn, "SELECT id FROM problems WHERE problem_url = '$problem_url'");
         if (mysqli_num_rows($check_dup) > 0) {
+            // Soal sudah ada di db, cukup hubungkan ke riwayat user saja
             $dup_row = mysqli_fetch_assoc($check_dup);
             $new_problem_id = $dup_row['id'];
             $insert_solved = "INSERT INTO solved_problems (user_id, problem_id, solved_at, proof_image) 
                               VALUES ($user_id, $new_problem_id, '$solved_at', $proof_path) 
                               ON DUPLICATE KEY UPDATE solved_at = VALUES(solved_at), proof_image = IF($proof_path IS NULL, proof_image, VALUES(proof_image))";
+            
             if (mysqli_query($conn, $insert_solved)) {
-                $message = "<div class='alert-success'>Soal eksternal berhasil ditambahkan ke riwayat Anda.</div>";
+                $message = "<div class='alert-success'>Soal berhasil ditambahkan ke riwayat penyelesaian Anda!</div>";
             } else {
                 $message = "<div class='alert-error'>Gagal menghubungkan soal ke riwayat Anda.</div>";
             }
         } else {
+            // Soal belum ada, daftarkan baru ke tabel problems terlebih dahulu
             $insert_query = "INSERT INTO problems (platform_id, title, problem_url, equivalent_rating, is_custom, created_by) 
                              VALUES ($platform_id, '$title', '$problem_url', $equivalent_rating, TRUE, $user_id)";
             
             if (mysqli_query($conn, $insert_query)) {
                 $new_problem_id = mysqli_insert_id($conn);
+                // Hubungkan ke riwayat penyelesaian user
                 $insert_solved = "INSERT INTO solved_problems (user_id, problem_id, solved_at, proof_image) 
                                   VALUES ($user_id, $new_problem_id, '$solved_at', $proof_path) 
                                   ON DUPLICATE KEY UPDATE solved_at = VALUES(solved_at), proof_image = IF($proof_path IS NULL, proof_image, VALUES(proof_image))";
                 mysqli_query($conn, $insert_solved);
-                $message = "<div class='alert-success'>Soal dan bukti penyelesaian berhasil ditambahkan ke repositori Anda.</div>";
+                $message = "<div class='alert-success'>Soal custom dan bukti berhasil disimpan!</div>";
             } else {
-                $message = "<div class='alert-error'>Galat sistem saat menyimpan data: " . mysqli_error($conn) . "</div>";
+                $message = "<div class='alert-error'>Gagal menyimpan soal ke database: " . mysqli_error($conn) . "</div>";
             }
         }
-    } elseif (isset($_POST['action']) && $_POST['action'] == 'delete') {
+    } 
+    
+    // AKSI 2: Menghapus Soal Custom yang Pernah Ditambahkan
+    elseif (isset($_POST['action']) && $_POST['action'] == 'delete') {
         $problem_id = (int)$_POST['problem_id'];
+        
+        // Hapus dari tabel problems (karena relasi cascading/manual, pastikan hanya menghapus milik sendiri)
         $delete_query = "DELETE FROM problems WHERE id = $problem_id AND created_by = $user_id AND is_custom = TRUE";
         mysqli_query($conn, $delete_query);
-        $message = "<div class='alert-success'>Soal berhasil dihapus.</div>";
+        $message = "<div class='alert-success'>Soal berhasil dihapus dari repositori Anda.</div>";
     }
 }
 
+// Menarik daftar platform untuk elemen select pilihan platform asal
 $platforms_query = "SELECT id, name FROM platforms";
 $platforms_result = mysqli_query($conn, $platforms_query);
 
-// Logika Search dan Pagination
+// --- LOGIKA SEARCH (PENCARIAN) & PAGINATION ---
 $search = isset($_GET['search']) ? mysqli_real_escape_string($conn, $_GET['search']) : '';
 $where_clause = "WHERE p.created_by = $user_id AND p.is_custom = TRUE";
 
+// Tambahkan pencarian kata kunci jika di-input
 if (!empty($search)) {
     $where_clause .= " AND p.title LIKE '%$search%'";
 }
 
+// Konfigurasi limit baris per halaman
 $limit = 5;
 $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
 if ($page < 1) $page = 1;
 
+// Hitung total baris data yang cocok dengan kriteria pencarian
 $count_query = "SELECT COUNT(*) as total FROM problems p $where_clause";
 $count_result = mysqli_query($conn, $count_query);
 $total_rows = mysqli_fetch_assoc($count_result)['total'];
 $total_pages = ceil($total_rows / $limit);
-$offset = ($page - 1) * $limit;
+$offset = ($page - 1) * $limit; // Hitung titik awal pemotongan data (offset)
 
+// Ambil data soal yang spesifik sesuai offset halaman saat ini
 $problems_query = "SELECT p.id, p.title, p.problem_url, p.equivalent_rating, pl.name AS platform_name 
                    FROM problems p 
                    JOIN platforms pl ON p.platform_id = pl.id 

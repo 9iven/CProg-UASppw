@@ -10,37 +10,43 @@ if (!isset($_SESSION['user_id'])) {
 $user_id = $_SESSION['user_id'];
 $message = '';
 
-// Memproses POST (Upload Avatar atau Delete Handle)
+// --- MEMPROSES AKSI POST (Unggah Avatar & Hapus Handle) ---
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    // Logika Upload Profile Picture
+    
+    // AKSI 1: Mengunggah Foto Profil (Avatar)
     if (isset($_POST['action']) && $_POST['action'] == 'upload_avatar') {
         if (isset($_FILES['profile_picture']) && $_FILES['profile_picture']['error'] == 0) {
+            // Ambil ekstensi file (misal: jpg, png)
             $ext = pathinfo($_FILES['profile_picture']['name'], PATHINFO_EXTENSION);
+            // Buat nama file unik menggunakan id user dan timestamp saat ini
             $filename = "avatar_" . $user_id . "_" . time() . "." . $ext;
             $destination = "uploads/avatars/" . $filename;
             
+            // Pindahkan file dari folder temporary server ke folder uploads kita
             if (move_uploaded_file($_FILES['profile_picture']['tmp_name'], $destination)) {
+                // Simpan path file gambar ke tabel users di database
                 mysqli_query($conn, "UPDATE users SET profile_picture = '$destination' WHERE id = $user_id");
-                $message = "<div class='alert-success'>Profile picture berhasil diperbarui.</div>";
+                $message = "<div class='alert-success'>Foto profil berhasil diperbarui!</div>";
             } else {
-                $message = "<div class='alert-error'>Galat sistem saat memproses upload file gambar.</div>";
+                $message = "<div class='alert-error'>Gagal memindahkan file ke server. Silakan coba lagi.</div>";
             }
         }
     }
-    // Logika Reset Data Handle
+    
+    // AKSI 2: Mereset / Menghapus Handle Platform
     elseif (isset($_POST['action']) && $_POST['action'] == 'delete_handle') {
         $handle_id = (int)$_POST['handle_id'];
         $platform_id = (int)$_POST['platform_id'];
         
-        // Menghapus histori rating
+        // Langkah A: Hapus riwayat rating kontes (rating_history) yang terikat ke handle ini
         mysqli_query($conn, "DELETE FROM rating_history WHERE user_handle_id = $handle_id");
-        // Menghapus handle
+        // Langkah B: Hapus data username/handle (user_handles)
         mysqli_query($conn, "DELETE FROM user_handles WHERE id = $handle_id");
-        // Membersihkan riwayat solved problems yang bukan berasal dari input custom manual
+        // Langkah C: Hapus riwayat soal terselesaikan (solved_problems) dari platform ini (kecuali yang ditambahkan manual/custom)
         $purge_query = "DELETE FROM solved_problems WHERE user_id = $user_id AND problem_id IN (SELECT id FROM problems WHERE platform_id = $platform_id AND is_custom = FALSE)";
         mysqli_query($conn, $purge_query);
         
-        $message = "<div class='alert-success'>Handle beserta riwayat datanya telah direset dari sistem.</div>";
+        $message = "<div class='alert-success'>Handle beserta riwayat datanya telah berhasil dihapus dari sistem.</div>";
     }
 }
 
