@@ -1,0 +1,33 @@
+/* --- Footer Layout Component --- */
+.app-footer {
+    margin-top: var(--space-xxl);
+    padding: 30px 0 40px;
+    border-top: 1px solid var(--color-border);
+    text-align: center;
+    width: 100%;
+    color: var(--color-text-dim);
+    font-size: 0.85rem;
+}
+
+.footer-links {
+    margin-bottom: 15px;
+}
+
+.footer-links a {
+    color: var(--color-text-muted);
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.footer-links a:hover {
+    color: var(--color-accent-cyan);
+}
+
+.footer-divider {
+    color: var(--color-border-focus);
+}
+
+.app-footer-landing {
+    max-width: 1000px;
+    margin: 40px auto 0;
+}

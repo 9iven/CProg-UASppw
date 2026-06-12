@@ -1,11 +1,11 @@
 <?php
 session_start();
 
-// Menghapus seluruh data session aktif
+// Clear all active session data
 session_unset();
 session_destroy();
 
-// Mengalihkan pengguna kembali ke halaman login
+// Redirect user back to the login page
 header("Location: login.php");
 exit;
 ?>

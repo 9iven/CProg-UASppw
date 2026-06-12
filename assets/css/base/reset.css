@@ -1,0 +1,13 @@
+/* --- Reset and Base Configuration --- */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: var(--font-primary);
+}
+
+body {
+    background-color: var(--color-bg-base);
+    color: var(--color-text-secondary);
+    line-height: 1.6;
+}

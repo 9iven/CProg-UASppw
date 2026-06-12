@@ -1,0 +1,196 @@
+/* --- Landing & Authentication Page Styles --- */
+
+/* Hero Section */
+.hero-section {
+    min-height: 100vh;
+    text-align: center;
+    padding: 60px 20px;
+    background-color: var(--color-bg-base);
+}
+
+.hero-title {
+    font-size: 3rem;
+    font-weight: bold;
+    margin-bottom: 20px;
+    color: var(--color-text-primary);
+    max-width: 900px;
+    line-height: 1.25;
+}
+
+.hero-subtitle {
+    font-size: 1.2rem;
+    max-width: 700px;
+    margin-bottom: 35px;
+    color: var(--color-text-muted);
+    line-height: 1.6;
+}
+
+.landing-logo-container {
+    margin-bottom: 40px;
+}
+
+.landing-logo-text {
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--color-text-primary);
+    letter-spacing: 0.5px;
+}
+
+.landing-subtitle-small {
+    color: var(--color-text-dim);
+    font-size: 0.85rem;
+    margin-top: 12px;
+}
+
+/* Integrations Badge Grid */
+.integrations-container {
+    margin-top: 50px;
+    width: 100%;
+    max-width: 800px;
+    border-top: 1px solid var(--color-border);
+    padding-top: 30px;
+    text-align: center;
+}
+
+.integrations-title {
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: var(--color-text-dim);
+    margin-bottom: 20px;
+    text-transform: uppercase;
+}
+
+.integrations-grid {
+}
+
+.integration-badge {
+    background-color: var(--color-bg-surface);
+    border: 1px solid var(--color-border);
+    padding: 10px 20px;
+    border-radius: var(--radius-sm);
+    font-weight: bold;
+    font-size: 0.95rem;
+    color: var(--color-text-muted);
+    transition: all 0.2s ease;
+}
+
+.integration-badge:hover {
+    border-color: var(--color-accent-cyan);
+    color: var(--color-text-primary);
+}
+
+/* Steps Grid */
+.steps-container {
+    margin-top: 60px;
+    width: 100%;
+    max-width: 1000px;
+    text-align: center;
+}
+
+.steps-title {
+    font-size: 1.5rem;
+    color: var(--color-text-primary);
+    margin-bottom: 30px;
+    font-weight: bold;
+}
+
+.steps-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 25px;
+}
+
+.landing-footer {
+    margin-top: 60px;
+    font-size: 0.8rem;
+    color: var(--color-text-dim);
+    border-top: 1px solid var(--color-border);
+    width: 100%;
+    max-width: 800px;
+    padding-top: 20px;
+}
+
+/* Authentication Page wrappers */
+.auth-wrapper {
+    min-height: 100vh;
+    background-color: var(--color-bg-base);
+}
+
+.auth-box {
+    background-color: var(--color-bg-surface);
+    padding: 40px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--color-border);
+    width: 100%;
+    max-width: 400px;
+    text-align: center;
+    box-shadow: var(--shadow-sm);
+}
+
+.auth-box h2 {
+    color: var(--color-text-primary);
+    margin-bottom: 25px;
+    font-size: 1.8rem;
+}
+
+.auth-footer {
+    margin-top: 20px;
+    color: var(--color-text-muted);
+    font-size: 0.9rem;
+}
+
+.auth-footer a {
+    color: var(--color-accent-yellow);
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.auth-footer a:hover {
+    color: var(--color-accent-pink);
+}
+
+/* Shared Brand Branding Icons & Accents */
+.custom-logo-img {
+    height: 38px;
+    width: 38px;
+    object-fit: contain;
+    margin-right: 15px;
+    border-radius: var(--radius-sm);
+}
+
+.auth-logo-img {
+    margin-right: 0;
+    width: 38px;
+    height: 38px;
+}
+
+.auth-brand-text {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--color-text-primary);
+    letter-spacing: 0.5px;
+}
+
+.logo-slash {
+    font-weight: 900;
+    font-size: 1.6rem;
+    margin-right: -4px;
+    font-style: italic;
+}
+.slash-m { color: #ff007f; text-shadow: 0 0 10px #ff007f; }
+.slash-c { color: #00f0ff; text-shadow: 0 0 10px #00f0ff; }
+.slash-y { color: #facc15; text-shadow: 0 0 10px #facc15; }
+
+/* Removed text accent color classes as they are in utilities.css */
+
+.text-accent-blue-size { font-size: 1.2rem; }
+.text-accent-yellow-size { font-size: 1.2rem; }
+.text-accent-pink-size { font-size: 1.2rem; }
+
+
+
+/* Status text coloring overrides */
+.text-cyan { color: var(--color-accent-cyan); }
+.text-magenta { color: var(--color-accent-pink-brand); }
+.text-yellow { color: var(--color-accent-yellow); }

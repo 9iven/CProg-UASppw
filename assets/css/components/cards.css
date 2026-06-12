@@ -1,0 +1,75 @@
+/* --- Card Components (OOCSS) --- */
+
+/* Base Card */
+.card {
+    background-color: var(--color-bg-surface);
+    padding: 25px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--color-border);
+}
+
+/* Modifiers */
+.card-hover {
+    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease, border-color 0.25s ease;
+}
+.card-hover:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-lg);
+    border-color: var(--color-border-focus);
+}
+
+.card-step {
+    border-top-width: 4px;
+    border-top-style: solid;
+}
+
+/* Base Card Headings */
+.card h3 {
+    font-size: 1.3rem;
+    color: var(--color-text-primary);
+    margin-bottom: 10px;
+}
+
+.card-step .step-number {
+    font-size: 1.8rem;
+    font-weight: 900;
+    color: var(--color-accent-cyan);
+    margin-bottom: 10px;
+}
+
+.card-step .step-headline {
+    font-size: 1.1rem;
+    font-weight: bold;
+    color: var(--color-text-primary);
+    margin-bottom: 10px;
+}
+
+/* Empty List / Placeholder Card */
+.placeholder-list {
+    border: 1px dashed var(--color-border-focus);
+    padding: var(--space-md);
+    border-radius: var(--radius-sm);
+    text-align: center;
+    color: var(--color-text-dim);
+    font-size: 0.9rem;
+}
+
+/* Competitive Programming Rank Badge */
+.rank-badge {
+    display: inline-block;
+    padding: 5px 14px;
+    border-radius: var(--radius-pill);
+    font-size: 0.75rem;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    color: var(--color-text-primary);
+}
+
+.tier-unrated { background-color: #555555; }
+.tier-newbie { background-color: #808080; }
+.tier-pupil { background-color: #008000; }
+.tier-specialist { background-color: #03a89e; }
+.tier-grandmaster { 
+    background-color: #ff0000; 
+    box-shadow: 0 0 10px rgba(255, 0, 0, 0.6); 
+}

@@ -1,6 +1,6 @@
 <?php
 session_start();
-require 'config.php';
+require 'config/db.php';
 
 if (!isset($_SESSION['user_id'])) {
     header("Location: login.php");
@@ -10,45 +10,45 @@ if (!isset($_SESSION['user_id'])) {
 $user_id = $_SESSION['user_id'];
 $message = '';
 
-// --- PROSES SUBMIT FORM POST (TAMBAH / HAPUS SOAL MANDIRI) ---
+// --- PROCESS POST FORM SUBMISSION (ADD / DELETE MANUAL PROBLEM) ---
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     
-    // AKSI 1: Menambahkan Soal Custom Baru
+    // ACTION 1: Add New Custom Problem
     if (isset($_POST['action']) && $_POST['action'] == 'add') {
         $platform_id = (int)$_POST['platform_id'];
         $title = mysqli_real_escape_string($conn, $_POST['title']);
         $problem_url = mysqli_real_escape_string($conn, $_POST['problem_url']);
         $equivalent_rating = (int)$_POST['equivalent_rating'];
         
-        // Membaca dan memformat tanggal penyelesaian (solved_at)
+        // Read and format the solved date (solved_at)
         $solved_at = mysqli_real_escape_string($conn, $_POST['solved_at']);
         if (empty($solved_at)) {
-            $solved_at = date('Y-m-d H:i:s'); // Fallback ke waktu server saat ini
+            $solved_at = date('Y-m-d H:i:s'); // Fallback to current server time
         } else {
-            // Jika input bertipe YYYY-MM-DD, tambahkan jam saat ini agar format TIMESTAMP MySQL lengkap
+            // If input format is YYYY-MM-DD, append current time for full MySQL TIMESTAMP
             if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $solved_at)) {
                 $solved_at .= ' ' . date('H:i:s');
             }
         }
         
-        // Logika Pengunggahan Gambar Bukti (Proof Image)
-        $proof_path = 'NULL'; // Default jika tidak mengunggah file
+        // Proof Image Upload Logic
+        $proof_path = 'NULL'; // Default if no file is uploaded
         if (isset($_FILES['proof_image']) && $_FILES['proof_image']['error'] == 0) {
             $ext = pathinfo($_FILES['proof_image']['name'], PATHINFO_EXTENSION);
-            // Memberikan nama unik menggunakan timestamp dan id user
+            // Give unique name using timestamp and user ID
             $filename = "proof_" . time() . "_" . $user_id . "." . $ext;
             $destination = "uploads/proofs/" . $filename;
             
-            // Pindahkan file temporary ke folder destinasi
+            // Move temporary file to destination folder
             if (move_uploaded_file($_FILES['proof_image']['tmp_name'], $destination)) {
                 $proof_path = "'" . mysqli_real_escape_string($conn, $destination) . "'";
             }
         }
         
-        // Cek duplikasi URL soal untuk menghindari double insert pada tabel problems
+        // Check duplicate problem URL to avoid double insert in the problems table
         $check_dup = mysqli_query($conn, "SELECT id FROM problems WHERE problem_url = '$problem_url'");
         if (mysqli_num_rows($check_dup) > 0) {
-            // Soal sudah ada di db, cukup hubungkan ke riwayat user saja
+            // Problem already exists in DB, just link it to user's history
             $dup_row = mysqli_fetch_assoc($check_dup);
             $new_problem_id = $dup_row['id'];
             $insert_solved = "INSERT INTO solved_problems (user_id, problem_id, solved_at, proof_image) 
@@ -56,109 +56,149 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                               ON DUPLICATE KEY UPDATE solved_at = VALUES(solved_at), proof_image = IF($proof_path IS NULL, proof_image, VALUES(proof_image))";
             
             if (mysqli_query($conn, $insert_solved)) {
-                $message = "<div class='alert-success'>Soal berhasil ditambahkan ke riwayat penyelesaian Anda!</div>";
+                $message = "<div class='alert alert-success'>Problem successfully added to your solved history!</div>";
             } else {
-                $message = "<div class='alert-error'>Gagal menghubungkan soal ke riwayat Anda.</div>";
+                $message = "<div class='alert alert-error'>Failed to link problem to your history.</div>";
             }
         } else {
-            // Soal belum ada, daftarkan baru ke tabel problems terlebih dahulu
+            // Problem does not exist yet, register new problem to the problems table first
             $insert_query = "INSERT INTO problems (platform_id, title, problem_url, equivalent_rating, is_custom, created_by) 
                              VALUES ($platform_id, '$title', '$problem_url', $equivalent_rating, TRUE, $user_id)";
             
             if (mysqli_query($conn, $insert_query)) {
                 $new_problem_id = mysqli_insert_id($conn);
-                // Hubungkan ke riwayat penyelesaian user
+                // Link to user's solved history
                 $insert_solved = "INSERT INTO solved_problems (user_id, problem_id, solved_at, proof_image) 
                                   VALUES ($user_id, $new_problem_id, '$solved_at', $proof_path) 
                                   ON DUPLICATE KEY UPDATE solved_at = VALUES(solved_at), proof_image = IF($proof_path IS NULL, proof_image, VALUES(proof_image))";
                 mysqli_query($conn, $insert_solved);
-                $message = "<div class='alert-success'>Soal custom dan bukti berhasil disimpan!</div>";
+                $message = "<div class='alert alert-success'>Custom problem and proof successfully saved!</div>";
             } else {
-                $message = "<div class='alert-error'>Gagal menyimpan soal ke database: " . mysqli_error($conn) . "</div>";
+                $message = "<div class='alert alert-error'>Failed to save problem to database: " . mysqli_error($conn) . "</div>";
             }
         }
     } 
     
-    // AKSI 2: Menghapus Soal Custom yang Pernah Ditambahkan
+    // ACTION 2: Delete Custom Problem
     elseif (isset($_POST['action']) && $_POST['action'] == 'delete') {
         $problem_id = (int)$_POST['problem_id'];
         
-        // Hapus dari tabel problems (karena relasi cascading/manual, pastikan hanya menghapus milik sendiri)
+        // Delete from problems table (cascade/manual relation, ensure deleting own record only)
         $delete_query = "DELETE FROM problems WHERE id = $problem_id AND created_by = $user_id AND is_custom = TRUE";
         mysqli_query($conn, $delete_query);
-        $message = "<div class='alert-success'>Soal berhasil dihapus dari repositori Anda.</div>";
+        $message = "<div class='alert alert-success'>Problem successfully deleted from your repository.</div>";
+    }
+
+    // ACTION 3: Update Custom Problem
+    elseif (isset($_POST['action']) && $_POST['action'] == 'update') {
+        $problem_id = (int)$_POST['problem_id'];
+        $platform_id = (int)$_POST['platform_id'];
+        $title = mysqli_real_escape_string($conn, $_POST['title']);
+        $problem_url = mysqli_real_escape_string($conn, $_POST['problem_url']);
+        $equivalent_rating = (int)$_POST['equivalent_rating'];
+        
+        $solved_at = mysqli_real_escape_string($conn, $_POST['solved_at']);
+        if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $solved_at)) {
+            $solved_at .= ' ' . date('H:i:s');
+        }
+
+        // Proof Image Upload Logic
+        $proof_update_sql = "";
+        if (isset($_FILES['proof_image']) && $_FILES['proof_image']['error'] == 0) {
+            $ext = pathinfo($_FILES['proof_image']['name'], PATHINFO_EXTENSION);
+            $filename = "proof_" . time() . "_" . $user_id . "." . $ext;
+            $destination = "uploads/proofs/" . $filename;
+            if (move_uploaded_file($_FILES['proof_image']['tmp_name'], $destination)) {
+                $proof_path = "'" . mysqli_real_escape_string($conn, $destination) . "'";
+                $proof_update_sql = ", proof_image = $proof_path";
+            }
+        }
+        
+        // Verify ownership and update problems table
+        $update_prob = "UPDATE problems SET platform_id = $platform_id, title = '$title', problem_url = '$problem_url', equivalent_rating = $equivalent_rating WHERE id = $problem_id AND created_by = $user_id AND is_custom = TRUE";
+        if (mysqli_query($conn, $update_prob) && mysqli_affected_rows($conn) > 0) {
+            // Update solved_problems
+            $update_solved = "UPDATE solved_problems SET solved_at = '$solved_at' $proof_update_sql WHERE problem_id = $problem_id AND user_id = $user_id";
+            mysqli_query($conn, $update_solved);
+            $message = "<div class='alert alert-success'>Problem successfully updated!</div>";
+        } else {
+            $message = "<div class='alert alert-error'>Failed to update problem or no changes made.</div>";
+        }
     }
 }
 
-// Menarik daftar platform untuk elemen select pilihan platform asal
+// Retrieve list of platforms for selection
 $platforms_query = "SELECT id, name FROM platforms";
 $platforms_result = mysqli_query($conn, $platforms_query);
 
-// --- LOGIKA SEARCH (PENCARIAN) & PAGINATION ---
+// --- SEARCH & PAGINATION LOGIC ---
 $search = isset($_GET['search']) ? mysqli_real_escape_string($conn, $_GET['search']) : '';
 $where_clause = "WHERE p.created_by = $user_id AND p.is_custom = TRUE";
 
-// Tambahkan pencarian kata kunci jika di-input
+// Add keyword search filter if input is provided
 if (!empty($search)) {
     $where_clause .= " AND p.title LIKE '%$search%'";
 }
 
-// Konfigurasi limit baris per halaman
+// Configuration of row limit per page
 $limit = 5;
 $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
 if ($page < 1) $page = 1;
 
-// Hitung total baris data yang cocok dengan kriteria pencarian
+// Count total matching data rows
 $count_query = "SELECT COUNT(*) as total FROM problems p $where_clause";
 $count_result = mysqli_query($conn, $count_query);
 $total_rows = mysqli_fetch_assoc($count_result)['total'];
 $total_pages = ceil($total_rows / $limit);
-$offset = ($page - 1) * $limit; // Hitung titik awal pemotongan data (offset)
+$offset = ($page - 1) * $limit; // Calculate the query offset
 
-// Ambil data soal yang spesifik sesuai offset halaman saat ini
-$problems_query = "SELECT p.id, p.title, p.problem_url, p.equivalent_rating, pl.name AS platform_name 
+// Retrieve specific problems based on current offset
+$problems_query = "SELECT p.id, p.title, p.problem_url, p.equivalent_rating, p.platform_id, pl.name AS platform_name, s.solved_at 
                    FROM problems p 
                    JOIN platforms pl ON p.platform_id = pl.id 
+                   LEFT JOIN solved_problems s ON s.problem_id = p.id AND s.user_id = $user_id
                    $where_clause 
                    ORDER BY p.id DESC LIMIT $limit OFFSET $offset";
 $problems_result = mysqli_query($conn, $problems_query);
 ?>
 
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manajemen Soal - CProg Viewer</title>
+    <title>Manage Problems - CProg Viewer</title>
     <link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body>
 
-    <header class="dashboard-header">
-        <div class="header-logo" style="display: flex; align-items: center;">
+    <header class="dashboard-header d-flex justify-between align-center">
+        <a href="dashboard.php" class="header-logo">
             <img src="assets/img/logo.png" alt="CProg Logo" class="custom-logo-img">
             <span>CProg <span class="text-accent-yellow">Viewer</span></span>
-        </div>
-        <div class="user-profile">
-            <a href="dashboard.php" class="btn-logout" style="background-color: #3b82f6; margin-right: 10px;">Kembali ke Dashboard</a>
+        </a>
+        <div class="user-profile d-flex align-center gap-md">
+            <a href="dashboard.php" class="btn btn-secondary btn-sm">Back to Dashboard</a>
         </div>
     </header>
 
     <main class="dashboard-container">
+        <h1 class="page-title blue-accent">Manage <span class="text-accent-yellow">Problems</span></h1>
         <?php echo $message; ?>
         
-        <section class="dashboard-grid" style="grid-template-columns: 1fr;">
+        <section class="dashboard-grid grid-1col">
             
-            <div class="grid-card">
-                <h3>Registrasi Soal Mandiri</h3>
-                <p class="card-desc">Tambahkan soal <em>custom</em> dan sertakan tangkapan layar sebagai bukti validasi.</p>
+            <div class="card card-hover">
+                <h3 id="formTitle">Manual Problem Registration</h3>
+                <p class="text-muted text-sm mb-md block">Add or edit a <em>custom</em> problem and include a screenshot as validation proof.</p>
                 
-                <form action="manage_problems.php" method="POST" enctype="multipart/form-data" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                    <input type="hidden" name="action" value="add">
+                <form id="addProblemForm" action="manage_problems.php" method="POST" enctype="multipart/form-data" class="form-grid-2">
+                    <input type="hidden" name="action" id="formAction" value="add">
+                    <input type="hidden" name="problem_id" id="formProblemId" value="">
                     <div class="form-group">
-                        <label>Platform Asal</label>
-                        <select name="platform_id" class="form-control" required>
-                            <option value="">-- Pilih Platform --</option>
+                        <label>Platform</label>
+                        <select name="platform_id" id="platformSelect" class="form-control" required>
+                            <option value="">-- Select Platform --</option>
                             <?php mysqli_data_seek($platforms_result, 0); ?>
                             <?php while($plat = mysqli_fetch_assoc($platforms_result)): ?>
                                 <option value="<?php echo $plat['id']; ?>"><?php echo htmlspecialchars($plat['name']); ?></option>
@@ -166,48 +206,53 @@ $problems_result = mysqli_query($conn, $problems_query);
                         </select>
                     </div>
                     <div class="form-group">
-                        <label>Ekuivalensi Rating</label>
-                        <input type="number" name="equivalent_rating" class="form-control" placeholder="Contoh: 1400" required>
+                        <label>Equivalent Rating</label>
+                        <input type="number" name="equivalent_rating" id="ratingInput" class="form-control" placeholder="Example: 1400" required>
+                        <small id="ratingGuide" class="field-helper-text">Select a platform to view rating guidelines.</small>
                     </div>
-                    <div class="form-group" style="grid-column: span 2;">
-                        <label>Judul Soal</label>
-                        <input type="text" name="title" id="titleInput" class="form-control" placeholder="Nama Soal" required>
+                    <div class="form-group form-span-2">
+                        <label>Problem Title</label>
+                        <input type="text" name="title" id="titleInput" class="form-control" placeholder="Problem Title" required>
+                        <small id="titleFeedback" class="field-helper-text"></small>
                     </div>
                     <div class="form-group">
-                        <label>Tautan Soal (URL)</label>
+                        <label>Problem URL</label>
                         <input type="url" name="problem_url" id="urlInput" class="form-control" placeholder="https://..." required>
+                        <small class="field-helper-text">Platform is automatically detected from URL.</small>
                     </div>
                     <div class="form-group">
-                        <label>Tanggal Diselesaikan</label>
-                        <input type="date" name="solved_at" class="form-control" required value="<?php echo date('Y-m-d'); ?>">
+                        <label>Date Solved</label>
+                        <input type="date" name="solved_at" id="solvedAtInput" class="form-control" required value="<?php echo date('Y-m-d'); ?>">
                     </div>
-                    <div class="form-group" style="grid-column: span 2;">
-                        <label>Unggah Bukti Gambar (Opsional)</label>
+                    <div class="form-group form-span-2">
+                        <label>Upload Proof Image (Optional)</label>
                         <input type="file" name="proof_image" class="form-control" accept="image/*">
                     </div>
-                    <button type="submit" class="btn-submit" style="grid-column: span 2;">Simpan Soal</button>
+                    <button type="submit" id="submitBtn" class="btn btn-primary btn-md form-span-2">Save Problem</button>
                 </form>
             </div>
 
-            <div class="grid-card">
-                <h3>Koleksi Soal Anda</h3>
+            <div class="card card-hover" id="problem-collection">
+                <h3>Your Problem Collection</h3>
                 
-                <form action="manage_problems.php" method="GET" style="display: flex; gap: 10px; margin-bottom: 20px;">
-                    <input type="text" name="search" class="form-control" placeholder="Cari berdasarkan judul soal..." value="<?php echo htmlspecialchars($search); ?>">
-                    <button type="submit" class="btn-submit" style="width: auto; padding: 0 20px; margin-top: 0; background-color: #facc15; color: #121212;">Cari</button>
-                    <?php if(!empty($search)): ?>
-                        <a href="manage_problems.php" class="btn-submit" style="width: auto; padding: 12px 20px; margin-top: 0; background-color: #444; color: #fff; text-decoration: none;">Reset</a>
-                    <?php endif; ?>
-                </form>
+                <div class="search-container d-flex justify-between align-center gap-sm flex-wrap">
+                    <form action="manage_problems.php#problem-collection" method="GET" class="search-bar-form">
+                        <input type="text" name="search" class="form-control flex-grow" placeholder="Search by problem title..." value="<?php echo htmlspecialchars($search); ?>">
+                        <button type="submit" class="btn btn-accent btn-md">Search</button>
+                        <?php if(!empty($search)): ?>
+                            <a href="manage_problems.php#problem-collection" class="btn btn-secondary btn-md">Reset</a>
+                        <?php endif; ?>
+                    </form>
+                </div>
 
-                <div style="overflow-x: auto;">
+                <div class="table-responsive">
                     <table class="data-table">
                         <thead>
                             <tr>
-                                <th>Judul Soal</th>
+                                <th>Problem Title</th>
                                 <th>Platform</th>
                                 <th>Rating</th>
-                                <th>Aksi</th>
+                                <th>Action</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -218,28 +263,31 @@ $problems_result = mysqli_query($conn, $problems_query);
                                     <td><?php echo htmlspecialchars($prob['platform_name']); ?></td>
                                     <td><?php echo $prob['equivalent_rating']; ?></td>
                                     <td>
-                                        <form action="manage_problems.php" method="POST" style="display:inline;">
-                                            <input type="hidden" name="action" value="delete">
-                                            <input type="hidden" name="problem_id" value="<?php echo $prob['id']; ?>">
-                                            <button type="submit" class="btn-delete" onclick="return confirm('Menghapus soal akan menghilangkannya dari riwayat penyelesaian Anda. Lanjutkan?');">Hapus</button>
-                                        </form>
+                                        <div class="d-flex align-center gap-xs">
+                                            <button type="button" class="btn btn-secondary btn-xs" onclick="editProblem(<?php echo $prob['id']; ?>, '<?php echo htmlspecialchars(addslashes($prob['title'])); ?>', '<?php echo htmlspecialchars(addslashes($prob['problem_url'])); ?>', <?php echo $prob['equivalent_rating']; ?>, <?php echo $prob['platform_id']; ?>, '<?php echo substr($prob['solved_at'], 0, 10); ?>')">Edit</button>
+                                            <form action="manage_problems.php" method="POST" class="inline-form mb-0">
+                                                <input type="hidden" name="action" value="delete">
+                                                <input type="hidden" name="problem_id" value="<?php echo $prob['id']; ?>">
+                                                <button type="submit" class="btn btn-danger btn-xs" onclick="return confirm('Deleting this problem will remove it from your solved history. Continue?');">Delete</button>
+                                            </form>
+                                        </div>
                                     </td>
                                 </tr>
                                 <?php endwhile; ?>
                             <?php else: ?>
                                 <tr>
-                                    <td colspan="4" style="text-align: center; color: #a1a1aa; padding: 20px;">Data soal tidak ditemukan.</td>
+                                    <td colspan="4" class="empty-table-cell">No problems found.</td>
                                 </tr>
-                            <?php endif; ?>
+                                <?php endif; ?>
                         </tbody>
                     </table>
                 </div>
 
                 <?php if ($total_pages > 1): ?>
-                <div style="margin-top: 20px; display: flex; gap: 8px; justify-content: center;">
+                <div class="pagination-container d-flex justify-center gap-sm">
                     <?php for($i = 1; $i <= $total_pages; $i++): ?>
-                        <a href="?page=<?php echo $i; ?>&search=<?php echo urlencode($search); ?>" 
-                           style="padding: 8px 14px; text-decoration: none; border-radius: 4px; font-weight: bold; <?php echo ($i == $page) ? 'background-color: #00f0ff; color: #121212;' : 'background-color: #2a2a2a; color: #e0e0e0; border: 1px solid #444;'; ?>">
+                        <a href="?page=<?php echo $i; ?>&search=<?php echo urlencode($search); ?>#problem-collection" 
+                           class="pagination-link <?php echo ($i == $page) ? 'active' : ''; ?>">
                             <?php echo $i; ?>
                         </a>
                     <?php endfor; ?>
@@ -250,30 +298,59 @@ $problems_result = mysqli_query($conn, $problems_query);
         </section>
     </main>
 
-    <script>
-        const urlInput = document.getElementById('urlInput');
-        const titleInput = document.getElementById('titleInput');
 
-        urlInput.addEventListener('blur', function() {
-            const url = this.value;
-            if (url && !titleInput.value) { 
-                titleInput.placeholder = "Mengambil data otomatis...";
-                fetch('fetch_title.php', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ url: url })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        titleInput.value = data.title;
-                    } else {
-                        titleInput.placeholder = "Gagal mengambil judul, silakan isi manual.";
-                    }
-                })
-                .catch(err => console.error('Fetch error:', err));
+    <footer class="app-footer">
+        <div class="footer-links d-flex justify-center gap-md flex-wrap">
+            <a href="#" class="footer-modal-trigger" data-type="pivot">Rating Pivot</a>
+            <span class="footer-divider">|</span>
+            <a href="#" class="footer-modal-trigger" data-type="guide">How to Use</a>
+            <span class="footer-divider">|</span>
+            <a href="https://github.com/9iven/CProg-UASppw" target="_blank">GitHub Repository</a>
+        </div>
+        <div class="footer-copyright">
+            &copy; <?php echo date('Y'); ?> CProg Tracker. All rights reserved.
+        </div>
+    </footer>
+
+    <!-- Universal Info Modal -->
+    <div id="infoModal" class="modal">
+        <div class="modal-content modal-info">
+            <span class="close-modal" id="closeInfoModalBtn">&times;</span>
+            <h3 id="infoModalTitle" class="modal-header-3">Information</h3>
+            <div id="infoModalBody"></div>
+        </div>
+    </div>
+
+    <script src="assets/js/script.js?v=<?php echo time(); ?>"></script>
+    <script>
+        function editProblem(id, title, url, rating, platformId, solvedAt) {
+            // Update form title and button text
+            document.getElementById('formTitle').textContent = 'Edit Custom Problem';
+            document.getElementById('submitBtn').textContent = 'Update Problem';
+            
+            // Set hidden inputs
+            document.getElementById('formAction').value = 'update';
+            document.getElementById('formProblemId').value = id;
+            
+            // Fill visible inputs
+            document.getElementById('titleInput').value = title;
+            document.getElementById('urlInput').value = url;
+            document.getElementById('ratingInput').value = rating;
+            document.getElementById('platformSelect').value = platformId;
+            
+            if (solvedAt) {
+                document.getElementById('solvedAtInput').value = solvedAt;
             }
-        });
+            
+            // Smooth scroll to the form
+            document.getElementById('addProblemForm').scrollIntoView({ behavior: 'smooth', block: 'center' });
+            
+            // Highlight the form briefly to show it's ready for editing
+            const formCard = document.getElementById('addProblemForm').closest('.card');
+            formCard.style.transition = 'box-shadow 0.3s ease';
+            formCard.style.boxShadow = 'var(--glow-cyan)';
+            setTimeout(() => { formCard.style.boxShadow = 'var(--shadow-lg)'; }, 1000);
+        }
     </script>
 </body>
 </html>

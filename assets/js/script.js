@@ -1,24 +1,305 @@
 document.addEventListener("DOMContentLoaded", function() {
-    // 1. Mencegah user menekan tombol submit berkali-kali pada form
+    // 1. Prevent double submission of forms
     const forms = document.querySelectorAll("form");
     forms.forEach(form => {
         form.addEventListener("submit", function() {
             const submitBtn = this.querySelector("button[type='submit']");
             if (submitBtn) {
                 submitBtn.disabled = true;
-                submitBtn.innerText = "Memproses...";
+                submitBtn.innerText = "Processing...";
                 submitBtn.style.opacity = "0.7";
             }
         });
     });
 
-    // 2. Animasi sederhana untuk notifikasi alert agar hilang perlahan
+    // 2. Fade out alert success/error blocks after 4s
     const alerts = document.querySelectorAll(".alert-success, .alert-error");
     alerts.forEach(alert => {
         setTimeout(() => {
             alert.style.transition = "opacity 0.5s ease";
             alert.style.opacity = "0";
             setTimeout(() => alert.remove(), 500);
-        }, 4000); // Menghilang setelah 4 detik
+        }, 4000);
     });
+
+    // 3. Universal Info Modal Logic (Footer link triggers)
+    const infoModal = document.getElementById("infoModal");
+    const closeInfoModalBtn = document.getElementById("closeInfoModalBtn");
+    const infoModalTitle = document.getElementById("infoModalTitle");
+    const infoModalBody = document.getElementById("infoModalBody");
+
+    const modalContents = {
+        pivot: {
+            title: "Rating Pivot Calculation",
+            body: `
+                <p style="margin-bottom: 15px;">To enable unified difficulty tracking across multiple competitive programming platforms, CProg Tracker translates platform-specific metrics into a single Codeforces-equivalent scale:</p>
+                <ul style="margin-left: 20px; margin-bottom: 15px;">
+                    <li style="margin-bottom: 8px;"><strong>Codeforces</strong>: Stays 1:1 using the official difficulty ratings (e.g. 800, 1200, 1600, 2400).</li>
+                    <li style="margin-bottom: 8px;"><strong>LeetCode</strong>: Maps standard problem difficulty categories to fixed equivalents:
+                        <ul style="margin-left: 20px; margin-top: 5px;">
+                            <li><span style="color: #2ecc71; font-weight: bold;">Easy</span> &rarr; 800 Rating</li>
+                            <li><span style="color: #facc15; font-weight: bold;">Medium</span> &rarr; 1200 Rating</li>
+                            <li><span style="color: #ec4899; font-weight: bold;">Hard</span> &rarr; 1600 Rating</li>
+                        </ul>
+                    </li>
+                    <li style="margin-bottom: 8px;"><strong>AtCoder / Others</strong>: Maps roughly based on platform grading (e.g., AtCoder Grey &approx; 800, Brown &approx; 1200).</li>
+                </ul>
+                <p>This allows the system to compute your average capability rating and suggest optimal problem recommendations across all linked platforms.</p>
+            `
+        },
+        guide: {
+            title: "How to Use CProg Tracker",
+            body: `
+                <ol style="margin-left: 20px; margin-bottom: 15px;">
+                    <li style="margin-bottom: 10px;"><strong>Add Platform Handles</strong>: Go to <em>Settings</em>, choose a platform (like Codeforces), and enter your username to synchronize your solve history.</li>
+                    <li style="margin-bottom: 10px;"><strong>Track Progress</strong>: The dashboard shows visual rating charts and difficulty trends generated from your submissions.</li>
+                    <li style="margin-bottom: 10px;"><strong>Manual Submissions</strong>: Use the "Add Custom Problem" modal to manually add solutions from other competitive programming sites and upload proof screenshots.</li>
+                    <li style="margin-bottom: 10px;"><strong>Smart Recommendations</strong>: Follow the adaptive recommendations on your dashboard. They are tailored to target problems slightly above your current average rating to help you level up faster.</li>
+                </ol>
+            `
+        }
+    };
+
+    document.querySelectorAll(".footer-modal-trigger").forEach(trigger => {
+        trigger.addEventListener("click", function(e) {
+            e.preventDefault();
+            const type = this.getAttribute("data-type");
+            if (modalContents[type] && infoModal) {
+                infoModalTitle.textContent = modalContents[type].title;
+                infoModalBody.innerHTML = modalContents[type].body;
+                infoModal.style.display = "flex";
+                document.body.style.overflow = "hidden";
+            }
+        });
+    });
+
+    if (closeInfoModalBtn && infoModal) {
+        closeInfoModalBtn.addEventListener("click", function(e) {
+            e.preventDefault();
+            infoModal.style.display = "none";
+            document.body.style.overflow = "auto";
+        });
+    }
+
+    // 4. Custom Problem Modal Logic (Dashboard)
+    const customModal = document.getElementById("customProblemModal");
+    const openCustomModalBtn = document.getElementById("openModalBtn");
+    const closeCustomModalBtn = document.getElementById("closeModalBtn");
+
+    if (openCustomModalBtn && customModal) {
+        openCustomModalBtn.addEventListener("click", function() {
+            customModal.style.display = "flex";
+            document.body.style.overflow = "hidden";
+        });
+    }
+
+    if (closeCustomModalBtn && customModal) {
+        closeCustomModalBtn.addEventListener("click", function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            customModal.style.display = "none";
+            document.body.style.overflow = "auto";
+        });
+    }
+
+    window.addEventListener("click", function(event) {
+        if (event.target === infoModal) {
+            infoModal.style.display = "none";
+            document.body.style.overflow = "auto";
+        }
+        if (event.target === customModal) {
+            customModal.style.display = "none";
+            document.body.style.overflow = "auto";
+        }
+    });
+
+    // 5. Chart.js Graphs (Dynamic initialization from HTML attributes)
+    if (typeof Chart !== 'undefined') {
+        Chart.defaults.color = '#a1a1aa';
+        Chart.defaults.scale.grid.color = '#333333';
+
+        const contestCanvas = document.getElementById('contestChart');
+        if (contestCanvas) {
+            const labels = JSON.parse(contestCanvas.getAttribute('data-labels') || '[]');
+            const values = JSON.parse(contestCanvas.getAttribute('data-values') || '[]');
+            new Chart(contestCanvas.getContext('2d'), {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Contest Rating',
+                        data: values,
+                        borderColor: '#00f0ff',
+                        backgroundColor: 'rgba(0, 240, 255, 0.1)',
+                        borderWidth: 2,
+                        pointBackgroundColor: '#ff007f',
+                        fill: true,
+                        tension: 0.3
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+        }
+
+        const solvedCanvas = document.getElementById('solvedChart');
+        if (solvedCanvas) {
+            const labels = JSON.parse(solvedCanvas.getAttribute('data-labels') || '[]');
+            const values = JSON.parse(solvedCanvas.getAttribute('data-values') || '[]');
+            new Chart(solvedCanvas.getContext('2d'), {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Difficulty Level (Rating)',
+                        data: values,
+                        borderColor: '#facc15',
+                        backgroundColor: 'rgba(250, 204, 21, 0.1)',
+                        borderWidth: 2,
+                        pointBackgroundColor: '#ffffff',
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+        }
+    }
+
+    // 6. Auto-fetch and platform detection logic
+    const ratingGuides = {
+        '1': 'Codeforces rating scale: e.g., 800 (Newbie) to 3500 (Grandmaster)',
+        '2': 'LeetCode equivalent: Easy = 800, Medium = 1200, Hard = 1600',
+        '3': 'Other/External: Enter any comparable difficulty rating (default: 1000)',
+        '4': 'AtCoder rating scale: e.g., 100 (Beginner) to 4000 (Grandmaster)',
+        '5': 'CodeChef rating scale: e.g., 1000 to 3000',
+        '6': 'CSES difficulty rating: e.g., 1000 to 2500',
+        '7': 'SPOJ typical rating scale: e.g., 1000 to 2500',
+        '8': 'HackerRank typical rating: e.g., 1000 to 2500',
+        '9': 'Topcoder rating scale: e.g., 1000 to 3000'
+    };
+
+    function detectPlatform(url) {
+        if (!url) return '';
+        const lower = url.toLowerCase();
+        if (lower.includes('codeforces.com')) return '1';
+        if (lower.includes('leetcode.com')) return '2';
+        if (lower.includes('atcoder.jp')) return '4';
+        if (lower.includes('codechef.com')) return '5';
+        if (lower.includes('cses.fi')) return '6';
+        if (lower.includes('spoj.com')) return '7';
+        if (lower.includes('hackerrank.com')) return '8';
+        if (lower.includes('topcoder.com')) return '9';
+        return '3';
+    }
+
+    function setupAutofetch(urlInput, titleInput, platformSelect, ratingGuide, titleFeedback, submitBtn) {
+        if (!urlInput) return;
+
+        function updateRatingGuide() {
+            const val = platformSelect.value;
+            if (ratingGuides[val]) {
+                ratingGuide.textContent = ratingGuides[val];
+                ratingGuide.classList.add('active-info');
+            } else {
+                ratingGuide.textContent = 'Select a platform to view rating guidelines.';
+                ratingGuide.classList.remove('active-info');
+            }
+        }
+
+        if (platformSelect) {
+            platformSelect.addEventListener('change', updateRatingGuide);
+        }
+
+        urlInput.addEventListener('input', function() {
+            const detected = detectPlatform(this.value);
+            if (detected && platformSelect && platformSelect.value !== detected) {
+                platformSelect.value = detected;
+                updateRatingGuide();
+            }
+        });
+
+        urlInput.addEventListener('blur', function() {
+            const url = this.value;
+            if (url && titleInput && !titleInput.value) {
+                titleInput.placeholder = "Fetching title automatically...";
+                titleInput.classList.add('fetching-glow');
+                if (titleFeedback) {
+                    titleFeedback.innerHTML = '<span class="spinner-loader"></span> Fetching details...';
+                    titleFeedback.style.color = '#facc15';
+                }
+                if (submitBtn) {
+                    submitBtn.disabled = true;
+                    submitBtn.style.opacity = '0.5';
+                }
+
+                fetch('includes/fetch_title.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url: url })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    titleInput.classList.remove('fetching-glow');
+                    if (submitBtn) {
+                        submitBtn.disabled = false;
+                        submitBtn.style.opacity = '1';
+                    }
+
+                    if (data.success) {
+                        if (!titleInput.value) {
+                            titleInput.value = data.title;
+                        }
+                        const ratingInput = document.getElementById(urlInput.id === 'modalUrlInput' ? 'modalRatingInput' : 'ratingInput');
+                        if (data.rating && ratingInput) {
+                            ratingInput.value = data.rating;
+                        }
+                        titleInput.classList.add('fetch-success-glow');
+                        if (titleFeedback) {
+                            titleFeedback.textContent = 'Autofill successful!';
+                            titleFeedback.style.color = '#2ecc71';
+                        }
+                        setTimeout(() => {
+                            titleInput.classList.remove('fetch-success-glow');
+                        }, 1000);
+                    } else if (titleFeedback) {
+                        titleInput.placeholder = "Problem Title";
+                        titleFeedback.textContent = 'Could not autofill. Please enter manually.';
+                        titleFeedback.style.color = '#ec4899';
+                    }
+                })
+                .catch(err => {
+                    console.error('Fetch error:', err);
+                    titleInput.classList.remove('fetching-glow');
+                    if (submitBtn) {
+                        submitBtn.disabled = false;
+                        submitBtn.style.opacity = '1';
+                    }
+                    titleInput.placeholder = "Problem Title";
+                    if (titleFeedback) {
+                        titleFeedback.textContent = 'Error during fetch. Please write manually.';
+                        titleFeedback.style.color = '#ec4899';
+                    }
+                });
+            }
+        });
+    }
+
+    // Bind autofetch to form inputs
+    setupAutofetch(
+        document.getElementById('modalUrlInput'),
+        document.getElementById('modalTitleInput'),
+        document.getElementById('modalPlatformSelect'),
+        document.getElementById('modalRatingGuide'),
+        document.getElementById('modalTitleFeedback'),
+        document.getElementById('modalSubmitBtn')
+    );
+
+    setupAutofetch(
+        document.getElementById('urlInput'),
+        document.getElementById('titleInput'),
+        document.getElementById('platformSelect'),
+        document.getElementById('ratingGuide'),
+        document.getElementById('titleFeedback'),
+        document.getElementById('submitBtn')
+    );
 });

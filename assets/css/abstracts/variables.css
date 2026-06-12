@@ -1,0 +1,64 @@
+:root {
+    /* Typography */
+    --font-primary: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+
+    /* Theme Colors (Base Dark Mode) */
+    --color-bg-base: #121212;
+    --color-bg-surface: #1e1e1e;
+    --color-bg-inner: #2a2a2a;
+    --color-bg-hover: #333333;
+
+    /* Borders */
+    --color-border: #333333;
+    --color-border-focus: #444444;
+
+    /* Typography Colors */
+    --color-text-primary: #ffffff;
+    --color-text-secondary: #e0e0e0;
+    --color-text-muted: #a1a1aa;
+    --color-text-dim: #71717a;
+
+    /* Brand & Accent Colors */
+    --color-accent-blue: #3b82f6;
+    --color-accent-blue-hover: #2563eb;
+    --color-accent-pink: #ec4899;
+    --color-accent-pink-hover: #e0006c;
+    --color-accent-pink-brand: #ff007f;
+    --color-accent-yellow: #facc15;
+    --color-accent-cyan: #00f0ff;
+
+    /* Semantic / Status Colors */
+    --color-success: #2ecc71;
+    --color-success-bg: rgba(46, 204, 113, 0.1);
+    --color-error: #e74c3c;
+    --color-error-bg: rgba(231, 76, 60, 0.1);
+
+    /* Spacing Scale (8px Grid System) */
+    --space-xs: 8px;
+    --space-sm: 12px;
+    --space-md: 20px;
+    --space-lg: 30px;
+    --space-xl: 40px;
+    --space-xxl: 60px;
+
+    /* Border Radius */
+    --radius-xs: 4px;
+    --radius-sm: 6px;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+    --radius-xl: 16px;
+    --radius-pill: 20px;
+
+    /* Elevation Shadows */
+    --shadow-sm: 0 4px 6px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+    --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.4);
+    --shadow-xl: 0 20px 40px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.05);
+
+    /* Visual Glow Effects */
+    --glow-cyan: 0 0 20px rgba(0, 240, 255, 0.25);
+    --glow-cyan-focus: 0 0 8px rgba(0, 240, 255, 0.35);
+    --glow-pink: 0 4px 15px rgba(236, 72, 153, 0.4);
+    --glow-success: 0 0 12px rgba(46, 204, 113, 0.8);
+    --glow-yellow-fetch: 0 0 10px rgba(250, 204, 21, 0.6);
+}

@@ -1,0 +1,113 @@
+/* --- Tables, Pagination & Solve Activity Lists --- */
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+    background-color: var(--color-bg-inner);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+}
+
+.data-table th, 
+.data-table td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.data-table th {
+    background-color: var(--color-bg-surface);
+    color: var(--color-text-muted);
+    font-weight: 600;
+}
+
+.data-table td {
+    color: var(--color-text-secondary);
+}
+
+.data-table tr:hover {
+    background-color: var(--color-bg-hover);
+}
+
+.table-responsive {
+    overflow-x: auto;
+}
+
+.empty-table-cell {
+    text-align: center;
+    color: var(--color-text-muted);
+    padding: var(--space-md);
+}
+
+/* Pagination component controls */
+.pagination-container {
+    margin-top: var(--space-md);
+}
+
+.pagination-link {
+    padding: 8px 14px;
+    text-decoration: none;
+    border-radius: var(--radius-xs);
+    font-weight: bold;
+    background-color: var(--color-bg-inner);
+    color: var(--color-text-secondary);
+    border: 1px solid var(--color-border-focus);
+    transition: all 0.2s ease;
+}
+
+.pagination-link:hover {
+    background-color: var(--color-bg-hover);
+    color: var(--color-accent-cyan);
+    border-color: var(--color-accent-cyan);
+}
+
+.pagination-link.active {
+    background-color: var(--color-accent-cyan);
+    color: var(--color-bg-base);
+    border-color: var(--color-accent-cyan);
+}
+
+/* Solved Activity Lists */
+.activity-list {
+    list-style: none;
+    padding: 0;
+}
+
+.activity-item {
+    padding: 12px 0;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.activity-item a {
+    text-decoration: none;
+    font-weight: bold;
+    font-size: 1.05rem;
+}
+
+.platform-badge {
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+    margin-left: 8px;
+    background-color: var(--color-bg-inner);
+    padding: 3px 8px;
+    border-radius: var(--radius-xs);
+}
+
+.proof-link {
+    font-size: 0.75rem;
+    color: var(--color-accent-pink);
+    margin-left: 8px;
+    text-decoration: underline;
+}
+
+.activity-rating {
+    color: var(--color-text-secondary);
+    font-size: 0.9rem;
+    font-weight: bold;
+}
+
+.empty-text {
+    color: var(--color-text-muted);
+    font-size: 0.9rem;
+}

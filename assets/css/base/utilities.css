@@ -1,0 +1,91 @@
+/* --- Utilities --- */
+
+/* Text Colors */
+.text-primary { color: var(--color-text-primary); }
+.text-muted { color: var(--color-text-muted); }
+.text-dim { color: var(--color-text-dim); }
+.text-accent-cyan { color: var(--color-accent-cyan); }
+.text-accent-yellow { color: var(--color-accent-yellow); }
+.text-accent-pink { color: var(--color-accent-pink-brand); }
+.text-magenta { color: var(--color-accent-pink-brand); }
+.text-yellow { color: var(--color-accent-yellow); }
+.text-cyan { color: var(--color-accent-cyan); }
+.text-pink { color: var(--color-accent-pink); }
+.text-error { color: var(--color-error); }
+.text-success { color: var(--color-success); }
+
+/* Text Sizes */
+.text-xs { font-size: 0.75rem; }
+.text-sm { font-size: 0.8rem; }
+.text-md { font-size: 0.9rem; }
+.text-lg { font-size: 1.1rem; }
+.text-xl { font-size: 1.3rem; }
+.text-2xl { font-size: 1.8rem; }
+.text-3xl { font-size: 2.5rem; }
+
+/* Font Weights */
+.font-normal { font-weight: normal; }
+.font-bold { font-weight: bold; }
+.font-black { font-weight: 900; }
+
+/* Text Alignment */
+.text-left { text-align: left; }
+.text-center { text-align: center; }
+.text-right { text-align: right; }
+
+/* Margins and Paddings (Helpers) */
+.mb-0 { margin-bottom: 0 !important; }
+.mb-xs { margin-bottom: var(--space-xs); }
+.mb-sm { margin-bottom: 10px; }
+.mb-md { margin-bottom: var(--space-md); }
+.mb-lg { margin-bottom: var(--space-lg); }
+
+.mt-0 { margin-top: 0 !important; }
+.mt-xs { margin-top: var(--space-xs); }
+.mt-sm { margin-top: 10px; }
+.mt-md { margin-top: var(--space-md); }
+.mt-lg { margin-top: var(--space-lg); }
+
+/* Paddings */
+.p-0 { padding: 0 !important; }
+.py-xs { padding-top: var(--space-xs); padding-bottom: var(--space-xs); }
+.py-sm { padding-top: 10px; padding-bottom: 10px; }
+.py-md { padding-top: var(--space-md); padding-bottom: var(--space-md); }
+.px-sm { padding-left: 10px; padding-right: 10px; }
+.px-md { padding-left: var(--space-md); padding-right: var(--space-md); }
+
+/* Visibility */
+.hidden { display: none !important; }
+.block { display: block; }
+.inline-block { display: inline-block; }
+
+/* Flex Layout */
+.d-flex { display: flex; }
+.flex-col { flex-direction: column; }
+.flex-wrap { flex-wrap: wrap; }
+
+/* Alignment */
+.align-center { align-items: center; }
+.align-start { align-items: flex-start; }
+.justify-center { justify-content: center; }
+.justify-between { justify-content: space-between; }
+.justify-end { justify-content: flex-end; }
+
+/* Gaps */
+.gap-xs { gap: var(--space-xs); }
+.gap-sm { gap: 10px; }
+.gap-md { gap: var(--space-md); }
+.gap-lg { gap: var(--space-lg); }
+
+/* Positioning & Layout */
+.w-full { width: 100%; }
+.max-w-md { max-width: 400px; }
+.max-w-lg { max-width: 800px; }
+.max-w-xl { max-width: 1000px; }
+.max-w-2xl { max-width: 1200px; }
+.mx-auto { margin-left: auto; margin-right: auto; }
+
+/* Top Border Colors */
+.border-t-pink { border-top-color: var(--color-accent-pink-brand) !important; }
+.border-t-cyan { border-top-color: var(--color-accent-cyan) !important; }
+.border-t-yellow { border-top-color: var(--color-accent-yellow) !important; }

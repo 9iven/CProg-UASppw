@@ -1,0 +1,39 @@
+/* --- Global Grid and Layout Containers --- */
+.dashboard-container {
+    max-width: 1200px;
+    margin: 40px auto;
+    padding: 0 var(--space-md);
+}
+
+.dashboard-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: var(--space-md);
+    margin-bottom: var(--space-lg);
+}
+
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-md);
+}
+
+.grid-1col {
+    grid-template-columns: 1fr;
+}
+
+.search-container {
+    margin-bottom: var(--space-md);
+}
+
+.flex-grow {
+    flex-grow: 1;
+}
+
+
+
+@media (max-width: 768px) {
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+}

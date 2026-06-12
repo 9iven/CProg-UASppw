@@ -1,0 +1,72 @@
+/* --- Header Component Layout --- */
+.dashboard-header {
+    padding: var(--space-md) var(--space-xl);
+    background-color: var(--color-bg-surface);
+    border-bottom: 1px solid var(--color-border);
+}
+
+.header-logo {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: var(--color-text-primary);
+    text-decoration: none;
+    transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.header-logo:hover,
+.auth-logo-container:hover {
+    transform: scale(1.03);
+    opacity: 0.9;
+}
+
+.auth-logo-container {
+    text-decoration: none;
+    transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+
+
+.user-profile {
+}
+
+.nav-link {
+    color: var(--color-text-muted);
+    text-decoration: none;
+    font-weight: bold;
+    font-size: 0.95rem;
+    padding: 8px 16px;
+    border-radius: var(--radius-sm);
+    transition: all 0.25s ease;
+    border: 1px solid transparent;
+}
+
+.nav-link:hover {
+    color: var(--color-accent-cyan);
+    background-color: rgba(0, 240, 255, 0.05);
+    border-color: rgba(0, 240, 255, 0.15);
+    transform: translateY(-2px);
+}
+
+/* Responsive navigation stacking */
+@media (max-width: 768px) {
+    .dashboard-header {
+        flex-direction: column;
+        gap: 15px;
+        padding: var(--space-md);
+        text-align: center;
+    }
+    
+    .user-profile {
+        flex-direction: column;
+        width: 100%;
+        gap: 10px;
+    }
+    
+    .user-profile a, 
+    .user-profile button {
+        width: 100%;
+        text-align: center;
+        margin-right: 0 !important;
+        display: block;
+    }
+}
