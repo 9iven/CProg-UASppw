@@ -5,7 +5,6 @@
  * This file contains utility helper functions used across various scripts 
  * in this application to perform tasks like making HTTP requests.
  * 
- * Keep it simple, beginner-friendly, and well-commented!
  */
 
 if (!function_exists('http_get_request')) {
