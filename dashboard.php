@@ -16,72 +16,6 @@ $email = $_SESSION['email'];
 
 $message = ''; // Success/error notification messages to be printed to screen
 
-// --- PROCESS POST HANDLER: ADD CUSTOM PROBLEM ---
-if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action']) && $_POST['action'] == 'add_custom_problem') {
-    $platform_id = (int)$_POST['platform_id'];
-    $title = mysqli_real_escape_string($conn, $_POST['title']);
-    $problem_url = mysqli_real_escape_string($conn, $_POST['problem_url']);
-    $equivalent_rating = (int)$_POST['equivalent_rating'];
-    
-    // Format solved date (solved_at)
-    $solved_at = mysqli_real_escape_string($conn, $_POST['solved_at']);
-    if (empty($solved_at)) {
-        $solved_at = date('Y-m-d H:i:s');
-    } else {
-        if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $solved_at)) {
-            $solved_at .= ' ' . date('H:i:s'); // Append current time
-        }
-    }
-    
-    // Proof Image Upload Logic (Screenshot / Proof Image)
-    $proof_path = 'NULL';
-    if (isset($_FILES['proof_image']) && $_FILES['proof_image']['error'] == 0) {
-        if (!is_dir('uploads/proofs')) {
-            mkdir('uploads/proofs', 0777, true); // Create folder if it doesn't exist
-        }
-        $ext = pathinfo($_FILES['proof_image']['name'], PATHINFO_EXTENSION);
-        $filename = "proof_" . time() . "_" . $user_id . "." . $ext;
-        $destination = "uploads/proofs/" . $filename;
-        if (move_uploaded_file($_FILES['proof_image']['tmp_name'], $destination)) {
-            $proof_path = "'" . mysqli_real_escape_string($conn, $destination) . "'";
-        }
-    }
-    
-    // Check duplicate problem URL to ensure problems data remains unique
-    $check_dup = mysqli_query($conn, "SELECT id FROM problems WHERE problem_url = '$problem_url'");
-    if (mysqli_num_rows($check_dup) > 0) {
-        // Problem already exists, link it to user's history
-        $dup_row = mysqli_fetch_assoc($check_dup);
-        $new_problem_id = $dup_row['id'];
-        $insert_solved = "INSERT INTO solved_problems (user_id, problem_id, solved_at, proof_image) 
-                          VALUES ($user_id, $new_problem_id, '$solved_at', $proof_path) 
-                          ON DUPLICATE KEY UPDATE solved_at = VALUES(solved_at), proof_image = IF($proof_path IS NULL, proof_image, VALUES(proof_image))";
-        if (mysqli_query($conn, $insert_solved)) {
-            $_SESSION['success_msg'] = "External problem successfully added to your history.";
-        } else {
-            $_SESSION['error_msg'] = "Failed to link problem to your history.";
-        }
-    } else {
-        // Problem does not exist, save new problem to problems table
-        $insert_query = "INSERT INTO problems (platform_id, title, problem_url, equivalent_rating, is_custom, created_by) 
-                         VALUES ($platform_id, '$title', '$problem_url', $equivalent_rating, TRUE, $user_id)";
-        
-        if (mysqli_query($conn, $insert_query)) {
-            $new_problem_id = mysqli_insert_id($conn);
-            // Link newly created problem to user solved history
-            $insert_solved = "INSERT INTO solved_problems (user_id, problem_id, solved_at, proof_image) 
-                              VALUES ($user_id, $new_problem_id, '$solved_at', $proof_path) 
-                              ON DUPLICATE KEY UPDATE solved_at = VALUES(solved_at), proof_image = IF($proof_path IS NULL, proof_image, VALUES(proof_image))";
-            mysqli_query($conn, $insert_solved);
-            $_SESSION['success_msg'] = "Custom problem successfully saved and added to your solve history.";
-        } else {
-            $_SESSION['error_msg'] = "System error while saving data: " . mysqli_error($conn);
-        }
-    }
-    header("Location: dashboard.php");
-    exit;
-}
-
 // Retrieve notification messages from session flash
 if (isset($_SESSION['success_msg'])) {
     $message .= "<div class='alert alert-success'>" . $_SESSION['success_msg'] . "</div>";
@@ -386,8 +320,9 @@ require_once 'includes/nav_dashboard.php';
             </h3>
             <p class="text-muted text-sm mb-lg">Add external problems manually (e.g., AtCoder, HackerRank, Virtual Judge, or external contest links).</p>
             
-            <form id="modalAddProblemForm" action="dashboard.php" method="POST" enctype="multipart/form-data" class="form-grid-2">
-                <input type="hidden" name="action" value="add_custom_problem">
+            <form id="modalAddProblemForm" action="manage_problems.php" method="POST" enctype="multipart/form-data" class="form-grid-2">
+                <input type="hidden" name="action" value="add">
+                <input type="hidden" name="source" value="dashboard">
                 
                 <div class="form-group form-span-2">
                     <label>Problem Link (URL) <span class="required-field">*</span></label>

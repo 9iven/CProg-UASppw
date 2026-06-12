@@ -125,6 +125,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $message = "<div class='alert alert-error'>Failed to update problem or no changes made.</div>";
         }
     }
+
+    if (isset($_POST['source']) && $_POST['source'] === 'dashboard') {
+        if (strpos($message, 'alert-success') !== false) {
+            $_SESSION['success_msg'] = strip_tags($message);
+        } else {
+            $_SESSION['error_msg'] = strip_tags($message);
+        }
+        header("Location: dashboard.php");
+        exit;
+    }
 }
 
 // Retrieve list of platforms for selection
