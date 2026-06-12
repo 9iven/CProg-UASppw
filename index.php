@@ -1,13 +1,7 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CProg Tracker - Competitive Programming Analytics</title>
-    <link rel="stylesheet" href="assets/css/style.css?v=<?php echo time(); ?>">
-</head>
-<body>
-
+<?php
+$page_title = 'CProg Tracker - Level Up Your Competitive Programming';
+require_once 'includes/head.php';
+?>
     <main class="hero-section d-flex flex-col align-center justify-center">
         <!-- Logo Branding (Using official logo.png image) -->
         <div class="landing-logo-container d-flex align-center gap-sm">
@@ -78,28 +72,7 @@
 
     </main>
 
-    <footer class="app-footer app-footer-landing">
-        <div class="footer-links">
-            <a href="#" class="footer-modal-trigger" data-type="pivot">Rating Pivot</a>
-            <span class="footer-divider">|</span>
-            <a href="#" class="footer-modal-trigger" data-type="guide">How to Use</a>
-            <span class="footer-divider">|</span>
-            <a href="https://github.com/9iven/CProg-UASppw" target="_blank">GitHub Repository</a>
-        </div>
-        <div class="footer-copyright">
-            &copy; <?php echo date('Y'); ?> CProg Tracker. All rights reserved.
-        </div>
-    </footer>
-
-    <!-- Universal Info Modal -->
-    <div id="infoModal" class="modal">
-        <div class="modal-content modal-info">
-            <span class="close-modal" id="closeInfoModalBtn">&times;</span>
-            <h3 id="infoModalTitle" class="modal-header-3">Information</h3>
-            <div id="infoModalBody"></div>
-        </div>
-    </div>
-
-    <script src="assets/js/script.js?v=<?php echo time(); ?>"></script>
-</body>
-</html>
+<?php 
+$is_landing = true;
+require_once 'includes/footer.php'; 
+?>

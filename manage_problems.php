@@ -162,25 +162,11 @@ $problems_query = "SELECT p.id, p.title, p.problem_url, p.equivalent_rating, p.p
 $problems_result = mysqli_query($conn, $problems_query);
 ?>
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manage Problems - CProg Viewer</title>
-    <link rel="stylesheet" href="assets/css/style.css">
-</head>
-<body>
-
-    <header class="dashboard-header d-flex justify-between align-center">
-        <a href="dashboard.php" class="header-logo">
-            <img src="assets/img/logo.png" alt="CProg Logo" class="custom-logo-img">
-            <span>CProg <span class="text-accent-yellow">Viewer</span></span>
-        </a>
-        <div class="user-profile d-flex align-center gap-md">
-            <a href="dashboard.php" class="btn btn-secondary btn-sm">Back to Dashboard</a>
-        </div>
-    </header>
+<?php
+$page_title = 'Manage Problems - CProg Tracker';
+require_once 'includes/head.php';
+require_once 'includes/nav_dashboard.php';
+?>
 
     <main class="dashboard-container">
         <h1 class="page-title blue-accent">Manage <span class="text-accent-yellow">Problems</span></h1>
@@ -299,29 +285,9 @@ $problems_result = mysqli_query($conn, $problems_query);
     </main>
 
 
-    <footer class="app-footer">
-        <div class="footer-links d-flex justify-center gap-md flex-wrap">
-            <a href="#" class="footer-modal-trigger" data-type="pivot">Rating Pivot</a>
-            <span class="footer-divider">|</span>
-            <a href="#" class="footer-modal-trigger" data-type="guide">How to Use</a>
-            <span class="footer-divider">|</span>
-            <a href="https://github.com/9iven/CProg-UASppw" target="_blank">GitHub Repository</a>
-        </div>
-        <div class="footer-copyright">
-            &copy; <?php echo date('Y'); ?> CProg Tracker. All rights reserved.
-        </div>
-    </footer>
-
-    <!-- Universal Info Modal -->
-    <div id="infoModal" class="modal">
-        <div class="modal-content modal-info">
-            <span class="close-modal" id="closeInfoModalBtn">&times;</span>
-            <h3 id="infoModalTitle" class="modal-header-3">Information</h3>
-            <div id="infoModalBody"></div>
-        </div>
-    </div>
-
-    <script src="assets/js/script.js?v=<?php echo time(); ?>"></script>
+<?php 
+ob_start(); 
+?>
     <script>
         function editProblem(id, title, url, rating, platformId, solvedAt) {
             // Update form title and button text
@@ -352,5 +318,7 @@ $problems_result = mysqli_query($conn, $problems_query);
             setTimeout(() => { formCard.style.boxShadow = 'var(--shadow-lg)'; }, 1000);
         }
     </script>
-</body>
-</html>
+<?php 
+$extra_scripts = ob_get_clean();
+require_once 'includes/footer.php'; 
+?>

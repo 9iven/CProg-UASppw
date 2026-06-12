@@ -199,28 +199,12 @@ while ($row = mysqli_fetch_assoc($chart2_res)) {
 }
 ?>
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - CProg Viewer</title>
-    <link rel="stylesheet" href="assets/css/style.css?v=<?php echo time(); ?>">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-</head>
-<body>
-
-    <header class="dashboard-header d-flex justify-between align-center">
-        <a href="dashboard.php" class="header-logo">
-            <img src="assets/img/logo.png" alt="CProg Logo" class="custom-logo-img">
-            <span>CProg <span class="text-accent-yellow">Tracker</span></span>
-        </a>
-        <div class="user-profile d-flex align-center gap-md">
-            <a href="manage_problems.php" class="nav-link d-flex align-center gap-xs">&#128218; Manage Problems</a>
-            <a href="settings.php" class="nav-link d-flex align-center gap-xs">&#9881; Settings</a>
-            <a href="logout.php" class="btn btn-secondary btn-sm">Sign Out</a>
-        </div>
-    </header>
+<?php
+$page_title = 'Dashboard - CProg Tracker';
+$needs_chartjs = true;
+require_once 'includes/head.php';
+require_once 'includes/nav_dashboard.php';
+?>
 
     <main class="dashboard-container">
         <?php echo $message; ?>
@@ -449,28 +433,4 @@ while ($row = mysqli_fetch_assoc($chart2_res)) {
     </div>
 
 
-    <footer class="app-footer">
-        <div class="footer-links d-flex justify-center gap-md flex-wrap">
-            <a href="#" class="footer-modal-trigger" data-type="pivot">Rating Pivot</a>
-            <span class="footer-divider">|</span>
-            <a href="#" class="footer-modal-trigger" data-type="guide">How to Use</a>
-            <span class="footer-divider">|</span>
-            <a href="https://github.com/9iven/CProg-UASppw" target="_blank">GitHub Repository</a>
-        </div>
-        <div class="footer-copyright">
-            &copy; <?php echo date('Y'); ?> CProg Tracker. All rights reserved.
-        </div>
-    </footer>
-
-    <!-- Universal Info Modal -->
-    <div id="infoModal" class="modal">
-        <div class="modal-content modal-info">
-            <span class="close-modal" id="closeInfoModalBtn">&times;</span>
-            <h3 id="infoModalTitle" class="modal-header-3">Information</h3>
-            <div id="infoModalBody"></div>
-        </div>
-    </div>
-
-    <script src="assets/js/script.js?v=<?php echo time(); ?>"></script>
-</body>
-</html>
+<?php require_once 'includes/footer.php'; ?>

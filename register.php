@@ -67,17 +67,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
     }
 }
-?>
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Register - CProg Viewer</title>
-    <link rel="stylesheet" href="assets/css/style.css">
-</head>
-<body>
+$page_title = 'Register - CProg Tracker';
+require_once 'includes/head.php';
+?>
 
     <main class="auth-wrapper d-flex justify-center align-center">
         <section class="auth-box">
@@ -125,6 +118,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             </div>
         </section>
     </main>
-    <script src="assets/js/script.js?v=<?php echo time(); ?>"></script>
-</body>
-</html>
+<?php 
+$no_footer = true;
+require_once 'includes/footer.php'; 
+?>
