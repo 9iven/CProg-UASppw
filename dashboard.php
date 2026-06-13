@@ -41,7 +41,7 @@ $user_handles_list = mysqli_query($conn, "SELECT uh.platform_id, uh.username, pl
 
 // Cache handles in an array to avoid redundant DB queries or seeking
 $handles_array = [];
-if (mysqli_num_rows($user_handles_list) > 0) {
+if ($user_handles_list && mysqli_num_rows($user_handles_list) > 0) {
     while ($handle_row = mysqli_fetch_assoc($user_handles_list)) {
         $handles_array[] = $handle_row;
     }
@@ -50,7 +50,7 @@ if (mysqli_num_rows($user_handles_list) > 0) {
 // Query profile metadata
 $has_custom_display_name = false;
 $meta_res = mysqli_query($conn, "SELECT profile_picture, display_name FROM users WHERE id = $user_id");
-if (mysqli_num_rows($meta_res) > 0) {
+if ($meta_res && mysqli_num_rows($meta_res) > 0) {
     $row = mysqli_fetch_assoc($meta_res);
     $profile_pic = $row['profile_picture'];
     if (!empty($row['display_name'])) {

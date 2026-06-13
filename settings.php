@@ -75,7 +75,7 @@ $handles_result = mysqli_query($conn, $handles_query);
 $user_info_query = "SELECT display_name FROM users WHERE id = $user_id";
 $user_info_result = mysqli_query($conn, $user_info_query);
 $current_display_name = "";
-if (mysqli_num_rows($user_info_result) > 0) {
+if ($user_info_result && mysqli_num_rows($user_info_result) > 0) {
     $current_display_name = mysqli_fetch_assoc($user_info_result)['display_name'];
 }
 ?>
