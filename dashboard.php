@@ -33,27 +33,36 @@ $modal_platforms_result = mysqli_query($conn, "SELECT id, name FROM platforms OR
 $user_display_name = explode('@', $email)[0]; // Fallback user display name from email
 $profile_pic = null;
 
+// Retrieve all synced handles for the user profile header links
+$user_handles_list = mysqli_query($conn, "SELECT uh.platform_id, uh.username, pl.name as platform_name 
+                                          FROM user_handles uh 
+                                          JOIN platforms pl ON uh.platform_id = pl.id 
+                                          WHERE uh.user_id = $user_id");
+
+// Cache handles in an array to avoid redundant DB queries or seeking
+$handles_array = [];
+if (mysqli_num_rows($user_handles_list) > 0) {
+    while ($handle_row = mysqli_fetch_assoc($user_handles_list)) {
+        $handles_array[] = $handle_row;
+    }
+}
+
 // Query profile metadata
+$has_custom_display_name = false;
 $meta_res = mysqli_query($conn, "SELECT profile_picture, display_name FROM users WHERE id = $user_id");
 if (mysqli_num_rows($meta_res) > 0) {
     $row = mysqli_fetch_assoc($meta_res);
     $profile_pic = $row['profile_picture'];
     if (!empty($row['display_name'])) {
         $user_display_name = $row['display_name'];
-    } else {
-        // Fallback: Use the first registered platform handle/username
-        $handles_res = mysqli_query($conn, "SELECT username FROM user_handles WHERE user_id = $user_id LIMIT 1");
-        if (mysqli_num_rows($handles_res) > 0) {
-            $user_display_name = mysqli_fetch_assoc($handles_res)['username'];
-        }
+        $has_custom_display_name = true;
     }
 }
 
-// Retrieve all synced handles for the user profile header links
-$user_handles_list = mysqli_query($conn, "SELECT uh.platform_id, uh.username, pl.name as platform_name 
-                                          FROM user_handles uh 
-                                          JOIN platforms pl ON uh.platform_id = pl.id 
-                                          WHERE uh.user_id = $user_id");
+// Fallback: Use the first registered platform handle/username
+if (!$has_custom_display_name && count($handles_array) > 0) {
+    $user_display_name = $handles_array[0]['username'];
+}
 
 // --- 2. CALCULATE USER CAPABILITY RATING AVERAGE ---
 $avg_rating_query = "SELECT ROUND(AVG(p.equivalent_rating)) as avg_rating, COUNT(s.id) as total_solved 
@@ -161,8 +170,8 @@ require_once 'includes/nav_dashboard.php';
                     <h2><?php echo htmlspecialchars($user_display_name); ?></h2>
                     <p><?php echo htmlspecialchars($email); ?></p>
                     <div class="user-handles-row handles-row d-flex flex-wrap gap-sm">
-                        <?php if (mysqli_num_rows($user_handles_list) > 0): ?>
-                            <?php while ($h = mysqli_fetch_assoc($user_handles_list)): 
+                        <?php if (count($handles_array) > 0): ?>
+                            <?php foreach ($handles_array as $h): 
                                 $profile_url = '';
                                 if ($h['platform_id'] == 1) {
                                     $profile_url = "https://codeforces.com/profile/" . htmlspecialchars($h['username']);
@@ -193,7 +202,7 @@ require_once 'includes/nav_dashboard.php';
                                         <?php echo htmlspecialchars($h['username']); ?>
                                     </span>
                                 <?php endif; ?>
-                            <?php endwhile; ?>
+                            <?php endforeach; ?>
                         <?php endif; ?>
                     </div>
                 </div>

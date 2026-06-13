@@ -15,10 +15,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     
     // ACTION 1: Update Profile (Avatar & Username)
     if (isset($_POST['action']) && $_POST['action'] == 'update_profile') {
-        $new_name = mysqli_real_escape_string($conn, trim($_POST['display_name']));
-        
         $update_parts = [];
-        if (!empty($new_name)) {
+        if (isset($_POST['display_name'])) {
+            $new_name = mysqli_real_escape_string($conn, trim($_POST['display_name']));
             $update_parts[] = "display_name = '$new_name'";
         }
 
