@@ -211,7 +211,7 @@ require_once 'includes/nav_dashboard.php';
                 <div class="d-flex justify-between align-center mb-sm">
                     <div>
                         <h3>Contest Rating Chart (Relative)</h3>
-                        <span class="text-xs text-muted block mt-xs">Sync fetches up to 2,000 recent records. Click graph to expand.</span>
+                        <span class="text-xs text-muted block mt-xs">Sync fetches up to 300 recent records. Click graph to expand.</span>
                     </div>
                     <div class="chart-nav">
                         <button class="btn btn-sm btn-secondary" id="c1-prev" title="Older">&larr;</button>
@@ -226,7 +226,7 @@ require_once 'includes/nav_dashboard.php';
                 <div class="d-flex justify-between align-center mb-sm">
                     <div>
                         <h3>Solved Difficulty Trend</h3>
-                        <span class="text-xs text-muted block mt-xs">Sync fetches up to 2,000 recent records. Click graph to expand.</span>
+                        <span class="text-xs text-muted block mt-xs">Sync fetches up to 300 recent records. Click graph to expand.</span>
                     </div>
                     <div class="chart-nav">
                         <button class="btn btn-sm btn-secondary" id="c2-prev" title="Older">&larr;</button>

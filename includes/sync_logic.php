@@ -43,7 +43,7 @@ function sync_platform($user_id, $platform_id, $handle_username, $conn) {
                     }
                 }
                 
-                $status_url = "https://codeforces.com/api/user.status?handle=" . urlencode($handle_username) . "&from=1&count=2000";
+                $status_url = "https://codeforces.com/api/user.status?handle=" . urlencode($handle_username) . "&from=1&count=300";
                 $res_status = http_get_request($status_url);
 
                 if ($res_status['code'] == 200 && $res_status['body']) {
@@ -106,7 +106,7 @@ function sync_platform($user_id, $platform_id, $handle_username, $conn) {
             return false;
         };
 
-        $subs_response = $fetch_leetcode(urlencode($handle_username) . "/acSubmission?limit=2000");
+        $subs_response = $fetch_leetcode(urlencode($handle_username) . "/acSubmission?limit=300");
 
         if ($subs_response) {
             $subs_data = json_decode($subs_response, true);
