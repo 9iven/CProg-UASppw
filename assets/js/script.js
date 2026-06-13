@@ -176,6 +176,95 @@ document.addEventListener("DOMContentLoaded", function() {
 
         initPaginatedChart('contestChart', 'c1-prev', 'c1-next', 'Contest Rating', '#00f0ff', 'rgba(0, 240, 255, 0.1)', '#ff007f');
         initPaginatedChart('solvedChart', 'c2-prev', 'c2-next', 'Difficulty Level', '#facc15', 'rgba(250, 204, 21, 0.1)', '#ffffff');
+
+        // Modal Chart Logic
+        let modalChartInstance = null;
+        let modalCurrentIndex = 0;
+        let modalWindowSize = 80; // Show more data points in the expanded view
+
+        window.openChartModal = function(sourceCanvasId, title, borderColor, bgColor, pointColor) {
+            const sourceCanvas = document.getElementById(sourceCanvasId);
+            const modalCanvas = document.getElementById('modalChartCanvas');
+            const modal = document.getElementById('chartModal');
+            const modalTitle = document.getElementById('chartModalTitle');
+            let prevBtn = document.getElementById('modal-prev');
+            let nextBtn = document.getElementById('modal-next');
+
+            if (!sourceCanvas || !modalCanvas || !modal) return;
+
+            modalTitle.innerText = title;
+            modal.style.display = "flex";
+            document.body.style.overflow = "hidden"; // Prevent background scrolling
+
+            const allLabels = JSON.parse(sourceCanvas.getAttribute('data-labels') || '[]');
+            const allValues = JSON.parse(sourceCanvas.getAttribute('data-values') || '[]');
+
+            modalCurrentIndex = Math.max(0, allLabels.length - modalWindowSize);
+
+            if (modalChartInstance) {
+                modalChartInstance.destroy();
+            }
+
+            modalChartInstance = new Chart(modalCanvas.getContext('2d'), {
+                type: 'line',
+                data: {
+                    labels: allLabels.slice(modalCurrentIndex, modalCurrentIndex + modalWindowSize),
+                    datasets: [{
+                        label: title,
+                        data: allValues.slice(modalCurrentIndex, modalCurrentIndex + modalWindowSize),
+                        borderColor: borderColor,
+                        backgroundColor: bgColor,
+                        borderWidth: 2,
+                        pointBackgroundColor: pointColor,
+                        fill: true,
+                        tension: 0.3
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+
+            function updateModalChart() {
+                modalChartInstance.data.labels = allLabels.slice(modalCurrentIndex, modalCurrentIndex + modalWindowSize);
+                modalChartInstance.data.datasets[0].data = allValues.slice(modalCurrentIndex, modalCurrentIndex + modalWindowSize);
+                modalChartInstance.update();
+                
+                if (prevBtn) prevBtn.disabled = modalCurrentIndex <= 0;
+                if (nextBtn) nextBtn.disabled = modalCurrentIndex + modalWindowSize >= allLabels.length;
+            }
+
+            // Remove old event listeners by cloning the buttons
+            const newPrev = prevBtn.cloneNode(true);
+            const newNext = nextBtn.cloneNode(true);
+            prevBtn.parentNode.replaceChild(newPrev, prevBtn);
+            nextBtn.parentNode.replaceChild(newNext, nextBtn);
+
+            newPrev.addEventListener('click', () => {
+                modalCurrentIndex = Math.max(0, modalCurrentIndex - modalWindowSize);
+                updateModalChart();
+            });
+            
+            newNext.addEventListener('click', () => {
+                modalCurrentIndex = Math.min(allLabels.length - modalWindowSize, modalCurrentIndex + modalWindowSize);
+                updateModalChart();
+            });
+            
+            updateModalChart();
+        };
+
+        const closeChartModalBtn = document.getElementById('closeChartModal');
+        const chartModal = document.getElementById('chartModal');
+        if (closeChartModalBtn && chartModal) {
+            closeChartModalBtn.addEventListener('click', () => {
+                chartModal.style.display = "none";
+                document.body.style.overflow = "auto";
+            });
+            window.addEventListener('click', (event) => {
+                if (event.target === chartModal) {
+                    chartModal.style.display = "none";
+                    document.body.style.overflow = "auto";
+                }
+            });
+        }
     }
 
     // 6. Auto-fetch and platform detection logic

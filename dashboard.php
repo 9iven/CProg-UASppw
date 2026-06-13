@@ -209,25 +209,31 @@ require_once 'includes/nav_dashboard.php';
         <section class="dashboard-grid mb-lg">
             <div class="card card-hover">
                 <div class="d-flex justify-between align-center mb-sm">
-                    <h3>Contest Rating Chart (Relative)</h3>
+                    <div>
+                        <h3>Contest Rating Chart (Relative)</h3>
+                        <span class="text-xs text-muted block mt-xs">Sync fetches up to 2,000 recent records. Click graph to expand.</span>
+                    </div>
                     <div class="chart-nav">
                         <button class="btn btn-sm btn-secondary" id="c1-prev" title="Older">&larr;</button>
                         <button class="btn btn-sm btn-secondary" id="c1-next" title="Newer" disabled>&rarr;</button>
                     </div>
                 </div>
-                <div class="chart-container" style="height: 300px; position: relative;">
+                <div class="chart-container" style="height: 300px; position: relative; cursor: pointer;" onclick="openChartModal('contestChart', 'Contest Rating Chart', '#00f0ff', 'rgba(0, 240, 255, 0.1)', '#ff007f')">
                     <canvas id="contestChart" data-labels="<?php echo htmlspecialchars(json_encode($c1_labels), ENT_QUOTES, 'UTF-8'); ?>" data-values="<?php echo htmlspecialchars(json_encode($c1_data), ENT_QUOTES, 'UTF-8'); ?>"></canvas>
                 </div>
             </div>
             <div class="card card-hover">
                 <div class="d-flex justify-between align-center mb-sm">
-                    <h3>Solved Difficulty Trend</h3>
+                    <div>
+                        <h3>Solved Difficulty Trend</h3>
+                        <span class="text-xs text-muted block mt-xs">Sync fetches up to 2,000 recent records. Click graph to expand.</span>
+                    </div>
                     <div class="chart-nav">
                         <button class="btn btn-sm btn-secondary" id="c2-prev" title="Older">&larr;</button>
                         <button class="btn btn-sm btn-secondary" id="c2-next" title="Newer" disabled>&rarr;</button>
                     </div>
                 </div>
-                <div class="chart-container" style="height: 300px; position: relative;">
+                <div class="chart-container" style="height: 300px; position: relative; cursor: pointer;" onclick="openChartModal('solvedChart', 'Solved Difficulty Trend', '#facc15', 'rgba(250, 204, 21, 0.1)', '#ffffff')">
                     <canvas id="solvedChart" data-labels="<?php echo htmlspecialchars(json_encode($c2_labels), ENT_QUOTES, 'UTF-8'); ?>" data-values="<?php echo htmlspecialchars(json_encode($c2_data), ENT_QUOTES, 'UTF-8'); ?>"></canvas>
                 </div>
             </div>
@@ -416,5 +422,22 @@ require_once 'includes/nav_dashboard.php';
         </div>
     </div>
 
+
+    <!-- Chart Modal -->
+    <div id="chartModal" class="modal">
+        <div class="modal-content" style="max-width: 90vw; width: 1000px;">
+            <span class="close-modal" id="closeChartModal">&times;</span>
+            <div class="d-flex justify-between align-center mb-md">
+                <h2 id="chartModalTitle">Chart View</h2>
+                <div class="chart-nav">
+                    <button class="btn btn-sm btn-secondary" id="modal-prev" title="Older">&larr;</button>
+                    <button class="btn btn-sm btn-secondary" id="modal-next" title="Newer" disabled>&rarr;</button>
+                </div>
+            </div>
+            <div class="chart-container" style="height: 60vh; position: relative;">
+                <canvas id="modalChartCanvas"></canvas>
+            </div>
+        </div>
+    </div>
 
 <?php require_once 'includes/footer.php'; ?>
