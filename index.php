@@ -5,7 +5,7 @@ require_once 'includes/head.php';
     <main class="hero-section d-flex flex-col align-center justify-center">
         <!-- Logo Branding (Using official logo.png image) -->
         <div class="landing-logo-container d-flex align-center gap-sm">
-            <img src="assets/img/logo.png" alt="CProg Tracker Logo" class="custom-logo-img">
+            <img src="assets/img/logo.png?v=<?php echo time(); ?>" alt="CProg Tracker Logo" class="custom-logo-img">
             <span class="landing-logo-text">CProg <span class="text-accent-yellow">Tracker</span></span>
         </div>
 

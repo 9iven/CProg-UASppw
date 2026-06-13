@@ -64,7 +64,7 @@ require_once 'includes/head.php';
         <section class="auth-box">
             <!-- Brand Logo -->
             <a href="index.php" class="auth-logo-container">
-                <img src="assets/img/logo.png" alt="CProg Tracker Logo" class="custom-logo-img auth-logo-img">
+                <img src="assets/img/logo.png?v=<?php echo time(); ?>" alt="CProg Tracker Logo" class="custom-logo-img auth-logo-img">
                 <span class="auth-brand-text">CProg <span class="text-accent-yellow">Tracker</span></span>
             </a>
             

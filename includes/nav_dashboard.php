@@ -3,7 +3,7 @@ $current_page = basename($_SERVER['PHP_SELF']);
 ?>
     <header class="dashboard-header d-flex justify-between align-center">
         <a href="dashboard.php" class="header-logo">
-            <img src="assets/img/logo.png" alt="CProg Logo" class="custom-logo-img">
+            <img src="assets/img/logo.png?v=<?php echo time(); ?>" alt="CProg Logo" class="custom-logo-img">
             <span>CProg <span class="text-accent-yellow">Tracker</span></span>
         </a>
         <div class="user-profile d-flex align-center gap-md">
