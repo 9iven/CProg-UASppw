@@ -29,19 +29,18 @@ function sync_platform($user_id, $platform_id, $handle_username, $conn) {
                     $handle_id = mysqli_insert_id($conn);
                 }
 
-                $last_rating_query = "SELECT rating FROM rating_history WHERE user_handle_id = $handle_id ORDER BY recorded_at DESC LIMIT 1";
-                $last_rating_res = mysqli_query($conn, $last_rating_query);
-                $should_insert_rating = true;
-                if (mysqli_num_rows($last_rating_res) > 0) {
-                    $last_rating_row = mysqli_fetch_assoc($last_rating_res);
-                    if ($last_rating_row['rating'] == $current_rating) {
-                        $should_insert_rating = false;
+                $rating_url = "https://codeforces.com/api/user.rating?handle=" . urlencode($handle_username);
+                $res_rating = http_get_request($rating_url);
+                if ($res_rating['code'] == 200 && $res_rating['body']) {
+                    $rating_data = json_decode($res_rating['body'], true);
+                    if (isset($rating_data['status']) && $rating_data['status'] === 'OK') {
+                        mysqli_query($conn, "DELETE FROM rating_history WHERE user_handle_id = $handle_id");
+                        foreach ($rating_data['result'] as $rc) {
+                            $r_val = (int)$rc['newRating'];
+                            $r_date = date('Y-m-d H:i:s', $rc['ratingUpdateTimeSeconds']);
+                            mysqli_query($conn, "INSERT INTO rating_history (user_handle_id, rating, recorded_at) VALUES ($handle_id, $r_val, '$r_date')");
+                        }
                     }
-                }
-                
-                if ($should_insert_rating) {
-                    $history_query = "INSERT INTO rating_history (user_handle_id, rating) VALUES ($handle_id, $current_rating)";
-                    mysqli_query($conn, $history_query);
                 }
                 
                 $status_url = "https://codeforces.com/api/user.status?handle=" . urlencode($handle_username) . "&from=1&count=50";
@@ -135,7 +134,17 @@ function sync_platform($user_id, $platform_id, $handle_username, $conn) {
                     $handle_id = mysqli_insert_id($conn);
                 }
 
-                if ($contest_rating > 0) {
+                if (isset($contest_data['contestParticipation']) && is_array($contest_data['contestParticipation']) && count($contest_data['contestParticipation']) > 0) {
+                    mysqli_query($conn, "DELETE FROM rating_history WHERE user_handle_id = $handle_id");
+                    foreach ($contest_data['contestParticipation'] as $participation) {
+                        if (isset($participation['rating'])) {
+                            $r_val = (int)$participation['rating'];
+                            $timestamp = isset($participation['contest']['startTime']) ? $participation['contest']['startTime'] : time();
+                            $r_date = date('Y-m-d H:i:s', $timestamp);
+                            mysqli_query($conn, "INSERT INTO rating_history (user_handle_id, rating, recorded_at) VALUES ($handle_id, $r_val, '$r_date')");
+                        }
+                    }
+                } else if ($contest_rating > 0) {
                     $last_rating_query = "SELECT rating FROM rating_history WHERE user_handle_id = $handle_id ORDER BY recorded_at DESC LIMIT 1";
                     $last_rating_res = mysqli_query($conn, $last_rating_query);
                     $should_insert_rating = true;

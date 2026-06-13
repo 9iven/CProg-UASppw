@@ -206,26 +206,29 @@ require_once 'includes/nav_dashboard.php';
             </div>
         </section>
 
-<?php
-// Calculate dynamic widths for charts to enable scrolling when there are many data points
-$c1_min_width = max(100, count($c1_labels) * 40); // 40px per data point
-$c2_min_width = max(100, count($c2_labels) * 40);
-?>
         <section class="dashboard-grid mb-lg">
             <div class="card card-hover">
-                <h3>Contest Rating Chart (Relative)</h3>
-                <div class="chart-scroll-wrapper" style="overflow-x: auto; overflow-y: hidden; width: 100%;">
-                    <div class="chart-container" style="min-width: <?php echo $c1_min_width; ?>px; height: 300px; position: relative;">
-                        <canvas id="contestChart" data-labels="<?php echo htmlspecialchars(json_encode($c1_labels), ENT_QUOTES, 'UTF-8'); ?>" data-values="<?php echo htmlspecialchars(json_encode($c1_data), ENT_QUOTES, 'UTF-8'); ?>"></canvas>
+                <div class="d-flex justify-between align-center mb-sm">
+                    <h3>Contest Rating Chart (Relative)</h3>
+                    <div class="chart-nav">
+                        <button class="btn btn-sm btn-secondary" id="c1-prev" title="Older">&larr;</button>
+                        <button class="btn btn-sm btn-secondary" id="c1-next" title="Newer" disabled>&rarr;</button>
                     </div>
+                </div>
+                <div class="chart-container" style="height: 300px; position: relative;">
+                    <canvas id="contestChart" data-labels="<?php echo htmlspecialchars(json_encode($c1_labels), ENT_QUOTES, 'UTF-8'); ?>" data-values="<?php echo htmlspecialchars(json_encode($c1_data), ENT_QUOTES, 'UTF-8'); ?>"></canvas>
                 </div>
             </div>
             <div class="card card-hover">
-                <h3>Solved Difficulty Trend</h3>
-                <div class="chart-scroll-wrapper" style="overflow-x: auto; overflow-y: hidden; width: 100%;">
-                    <div class="chart-container" style="min-width: <?php echo $c2_min_width; ?>px; height: 300px; position: relative;">
-                        <canvas id="solvedChart" data-labels="<?php echo htmlspecialchars(json_encode($c2_labels), ENT_QUOTES, 'UTF-8'); ?>" data-values="<?php echo htmlspecialchars(json_encode($c2_data), ENT_QUOTES, 'UTF-8'); ?>"></canvas>
+                <div class="d-flex justify-between align-center mb-sm">
+                    <h3>Solved Difficulty Trend</h3>
+                    <div class="chart-nav">
+                        <button class="btn btn-sm btn-secondary" id="c2-prev" title="Older">&larr;</button>
+                        <button class="btn btn-sm btn-secondary" id="c2-next" title="Newer" disabled>&rarr;</button>
                     </div>
+                </div>
+                <div class="chart-container" style="height: 300px; position: relative;">
+                    <canvas id="solvedChart" data-labels="<?php echo htmlspecialchars(json_encode($c2_labels), ENT_QUOTES, 'UTF-8'); ?>" data-values="<?php echo htmlspecialchars(json_encode($c2_data), ENT_QUOTES, 'UTF-8'); ?>"></canvas>
                 </div>
             </div>
         </section>

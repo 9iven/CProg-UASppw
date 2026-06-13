@@ -118,51 +118,64 @@ document.addEventListener("DOMContentLoaded", function() {
         Chart.defaults.color = '#a1a1aa';
         Chart.defaults.scale.grid.color = '#333333';
 
-        const contestCanvas = document.getElementById('contestChart');
-        if (contestCanvas) {
-            const labels = JSON.parse(contestCanvas.getAttribute('data-labels') || '[]');
-            const values = JSON.parse(contestCanvas.getAttribute('data-values') || '[]');
-            new Chart(contestCanvas.getContext('2d'), {
+        const WINDOW_SIZE = 40; // Number of points to show per page
+
+        function initPaginatedChart(canvasId, prevBtnId, nextBtnId, labelStr, borderColor, bgColor, pointColor) {
+            const canvas = document.getElementById(canvasId);
+            if (!canvas) return;
+
+            const allLabels = JSON.parse(canvas.getAttribute('data-labels') || '[]');
+            const allValues = JSON.parse(canvas.getAttribute('data-values') || '[]');
+            const prevBtn = document.getElementById(prevBtnId);
+            const nextBtn = document.getElementById(nextBtnId);
+
+            // Start so that the latest (rightmost) items are shown
+            let currentIndex = Math.max(0, allLabels.length - WINDOW_SIZE);
+
+            const chart = new Chart(canvas.getContext('2d'), {
                 type: 'line',
                 data: {
-                    labels: labels,
+                    labels: allLabels.slice(currentIndex, currentIndex + WINDOW_SIZE),
                     datasets: [{
-                        label: 'Contest Rating',
-                        data: values,
-                        borderColor: '#00f0ff',
-                        backgroundColor: 'rgba(0, 240, 255, 0.1)',
+                        label: labelStr,
+                        data: allValues.slice(currentIndex, currentIndex + WINDOW_SIZE),
+                        borderColor: borderColor,
+                        backgroundColor: bgColor,
                         borderWidth: 2,
-                        pointBackgroundColor: '#ff007f',
+                        pointBackgroundColor: pointColor,
                         fill: true,
                         tension: 0.3
                     }]
                 },
                 options: { responsive: true, maintainAspectRatio: false }
             });
+
+            function updateChart() {
+                chart.data.labels = allLabels.slice(currentIndex, currentIndex + WINDOW_SIZE);
+                chart.data.datasets[0].data = allValues.slice(currentIndex, currentIndex + WINDOW_SIZE);
+                chart.update();
+                
+                if (prevBtn) prevBtn.disabled = currentIndex <= 0;
+                if (nextBtn) nextBtn.disabled = currentIndex + WINDOW_SIZE >= allLabels.length;
+            }
+
+            if (prevBtn) {
+                prevBtn.addEventListener('click', () => {
+                    currentIndex = Math.max(0, currentIndex - WINDOW_SIZE);
+                    updateChart();
+                });
+            }
+            if (nextBtn) {
+                nextBtn.addEventListener('click', () => {
+                    currentIndex = Math.min(allLabels.length - WINDOW_SIZE, currentIndex + WINDOW_SIZE);
+                    updateChart();
+                });
+            }
+            updateChart(); // Set initial button states
         }
 
-        const solvedCanvas = document.getElementById('solvedChart');
-        if (solvedCanvas) {
-            const labels = JSON.parse(solvedCanvas.getAttribute('data-labels') || '[]');
-            const values = JSON.parse(solvedCanvas.getAttribute('data-values') || '[]');
-            new Chart(solvedCanvas.getContext('2d'), {
-                type: 'line',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: 'Difficulty Level (Rating)',
-                        data: values,
-                        borderColor: '#facc15',
-                        backgroundColor: 'rgba(250, 204, 21, 0.1)',
-                        borderWidth: 2,
-                        pointBackgroundColor: '#ffffff',
-                        fill: true,
-                        tension: 0.4
-                    }]
-                },
-                options: { responsive: true, maintainAspectRatio: false }
-            });
-        }
+        initPaginatedChart('contestChart', 'c1-prev', 'c1-next', 'Contest Rating', '#00f0ff', 'rgba(0, 240, 255, 0.1)', '#ff007f');
+        initPaginatedChart('solvedChart', 'c2-prev', 'c2-next', 'Difficulty Level', '#facc15', 'rgba(250, 204, 21, 0.1)', '#ffffff');
     }
 
     // 6. Auto-fetch and platform detection logic
