@@ -33,12 +33,19 @@ function sync_platform($user_id, $platform_id, $handle_username, $conn) {
                 $user_info = $data['result'][0];
                 $current_rating = isset($user_info['rating']) ? (int)$user_info['rating'] : 0;
 
-                $check_query = "SELECT id FROM user_handles WHERE user_id = $user_id AND platform_id = 1";
+                $check_query = "SELECT id, username FROM user_handles WHERE user_id = $user_id AND platform_id = 1";
                 $check_result = mysqli_query($conn, $check_query);
 
                 if (mysqli_num_rows($check_result) > 0) {
                     $row = mysqli_fetch_assoc($check_result);
                     $handle_id = $row['id'];
+                    $old_username = $row['username'];
+                    
+                    if ($old_username !== $safe_username) {
+                        $purge_query = "DELETE FROM solved_problems WHERE user_id = $user_id AND problem_id IN (SELECT id FROM problems WHERE platform_id = 1 AND is_custom = FALSE)";
+                        mysqli_query($conn, $purge_query);
+                    }
+
                     $update_query = "UPDATE user_handles SET username = '$safe_username', current_rating = $current_rating WHERE id = $handle_id";
                     mysqli_query($conn, $update_query);
                 } else {
@@ -126,12 +133,19 @@ function sync_platform($user_id, $platform_id, $handle_username, $conn) {
                     }
                 }
 
-                $check_query = "SELECT id FROM user_handles WHERE user_id = $user_id AND platform_id = 2";
+                $check_query = "SELECT id, username FROM user_handles WHERE user_id = $user_id AND platform_id = 2";
                 $check_result = mysqli_query($conn, $check_query);
 
                 if (mysqli_num_rows($check_result) > 0) {
                     $row = mysqli_fetch_assoc($check_result);
                     $handle_id = $row['id'];
+                    $old_username = $row['username'];
+                    
+                    if ($old_username !== $safe_username) {
+                        $purge_query = "DELETE FROM solved_problems WHERE user_id = $user_id AND problem_id IN (SELECT id FROM problems WHERE platform_id = 2 AND is_custom = FALSE)";
+                        mysqli_query($conn, $purge_query);
+                    }
+
                     $update_query = "UPDATE user_handles SET username = '$safe_username', current_rating = $contest_rating WHERE id = $handle_id";
                     mysqli_query($conn, $update_query);
                 } else {
@@ -202,12 +216,19 @@ function sync_platform($user_id, $platform_id, $handle_username, $conn) {
     }
     // OTHER PLATFORMS (Manual entry update)
     else {
-        $check_query = "SELECT id FROM user_handles WHERE user_id = $user_id AND platform_id = $platform_id";
+        $check_query = "SELECT id, username FROM user_handles WHERE user_id = $user_id AND platform_id = $platform_id";
         $check_result = mysqli_query($conn, $check_query);
     
         if (mysqli_num_rows($check_result) > 0) {
             $row = mysqli_fetch_assoc($check_result);
             $handle_id = $row['id'];
+            $old_username = $row['username'];
+            
+            if ($old_username !== $safe_username) {
+                $purge_query = "DELETE FROM solved_problems WHERE user_id = $user_id AND problem_id IN (SELECT id FROM problems WHERE platform_id = $platform_id AND is_custom = FALSE)";
+                mysqli_query($conn, $purge_query);
+            }
+
             $update_query = "UPDATE user_handles SET username = '$safe_username' WHERE id = $handle_id";
             mysqli_query($conn, $update_query);
         } else {
