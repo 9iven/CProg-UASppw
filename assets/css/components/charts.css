@@ -1,0 +1,22 @@
+/* --- Chart Component Styles --- */
+
+.chart-container-std {
+    height: 300px;
+    position: relative;
+    cursor: pointer;
+}
+
+.chart-container-large {
+    height: 60vh;
+    position: relative;
+}
+
+/* Modal chart specific adjustments */
+.modal-chart-content {
+    max-width: 90vw !important;
+    width: 1000px !important;
+}
+
+.modal-chart-nav {
+    margin-right: 45px;
+}

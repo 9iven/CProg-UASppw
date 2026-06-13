@@ -1,6 +1,24 @@
 <?php
 require_once __DIR__ . '/helpers.php';
 
+function insert_or_update_solved_problem($conn, $user_id, $platform_id, $prob_name, $prob_url, $prob_rating, $solved_date) {
+    $check_prob = "SELECT id FROM problems WHERE platform_id = $platform_id AND title = '$prob_name'";
+    $res_prob = mysqli_query($conn, $check_prob);
+    
+    if (mysqli_num_rows($res_prob) > 0) {
+        $prob_row = mysqli_fetch_assoc($res_prob);
+        $db_problem_id = $prob_row['id'];
+    } else {
+        $rating_val = is_callable($prob_rating) ? call_user_func($prob_rating) : (int)$prob_rating;
+        $ins_prob = "INSERT INTO problems (platform_id, title, problem_url, equivalent_rating, is_custom) VALUES ($platform_id, '$prob_name', '$prob_url', $rating_val, FALSE)";
+        mysqli_query($conn, $ins_prob);
+        $db_problem_id = mysqli_insert_id($conn);
+    }
+    
+    $ins_solved = "INSERT INTO solved_problems (user_id, problem_id, solved_at) VALUES ($user_id, $db_problem_id, '$solved_date') ON DUPLICATE KEY UPDATE solved_at = VALUES(solved_at)";
+    mysqli_query($conn, $ins_solved);
+}
+
 function sync_platform($user_id, $platform_id, $handle_username, $conn) {
     $safe_username = mysqli_real_escape_string($conn, $handle_username);
     
@@ -61,20 +79,8 @@ function sync_platform($user_id, $platform_id, $handle_username, $conn) {
                                 $solved_timestamp = isset($submission['creationTimeSeconds']) ? (int)$submission['creationTimeSeconds'] : time();
                                 $solved_date = date('Y-m-d H:i:s', $solved_timestamp);
                                 
-                                $check_prob = "SELECT id FROM problems WHERE platform_id = 1 AND title = '$prob_name'";
-                                $res_prob = mysqli_query($conn, $check_prob);
                                 
-                                if (mysqli_num_rows($res_prob) > 0) {
-                                    $prob_row = mysqli_fetch_assoc($res_prob);
-                                    $db_problem_id = $prob_row['id'];
-                                } else {
-                                    $ins_prob = "INSERT INTO problems (platform_id, title, problem_url, equivalent_rating, is_custom) VALUES (1, '$prob_name', '$prob_url', $prob_rating, FALSE)";
-                                    mysqli_query($conn, $ins_prob);
-                                    $db_problem_id = mysqli_insert_id($conn);
-                                }
-                                
-                                $ins_solved = "INSERT INTO solved_problems (user_id, problem_id, solved_at) VALUES ($user_id, $db_problem_id, '$solved_date') ON DUPLICATE KEY UPDATE solved_at = VALUES(solved_at)";
-                                mysqli_query($conn, $ins_solved);
+                                insert_or_update_solved_problem($conn, $user_id, 1, $prob_name, $prob_url, $prob_rating, $solved_date);
                             }
                         }
                     }
@@ -169,36 +175,22 @@ function sync_platform($user_id, $platform_id, $handle_username, $conn) {
                     $solved_timestamp = isset($submission['timestamp']) ? (int)$submission['timestamp'] : time();
                     $solved_date = date('Y-m-d H:i:s', $solved_timestamp);
 
-                    $check_prob = "SELECT id FROM problems WHERE platform_id = 2 AND title = '$prob_name'";
-                    $res_prob = mysqli_query($conn, $check_prob);
-                    
-                    if (mysqli_num_rows($res_prob) > 0) {
-                        $prob_row = mysqli_fetch_assoc($res_prob);
-                        $db_problem_id = $prob_row['id'];
-                    } else {
+                    $rating_fetcher = function() use ($fetch_leetcode, $title_slug) {
                         $prob_rating = 1000;
                         $select_response = $fetch_leetcode("select?titleSlug=" . urlencode($title_slug));
                         if ($select_response) {
                             $select_data = json_decode($select_response, true);
                             if (isset($select_data['difficulty'])) {
                                 $difficulty = $select_data['difficulty'];
-                                if ($difficulty === 'Easy') {
-                                    $prob_rating = 800;
-                                } else if ($difficulty === 'Medium') {
-                                    $prob_rating = 1200;
-                                } else if ($difficulty === 'Hard') {
-                                    $prob_rating = 1600;
-                                }
+                                if ($difficulty === 'Easy') return 800;
+                                if ($difficulty === 'Medium') return 1200;
+                                if ($difficulty === 'Hard') return 1600;
                             }
                         }
+                        return $prob_rating;
+                    };
 
-                        $ins_prob = "INSERT INTO problems (platform_id, title, problem_url, equivalent_rating, is_custom) VALUES (2, '$prob_name', '$prob_url', $prob_rating, FALSE)";
-                        mysqli_query($conn, $ins_prob);
-                        $db_problem_id = mysqli_insert_id($conn);
-                    }
-
-                    $ins_solved = "INSERT INTO solved_problems (user_id, problem_id, solved_at) VALUES ($user_id, $db_problem_id, '$solved_date') ON DUPLICATE KEY UPDATE solved_at = VALUES(solved_at)";
-                    mysqli_query($conn, $ins_solved);
+                    insert_or_update_solved_problem($conn, $user_id, 2, $prob_name, $prob_url, $rating_fetcher, $solved_date);
                 }
                 return ['success' => true, 'message' => "LeetCode synced."];
             } else {
