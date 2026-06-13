@@ -112,25 +112,29 @@ $chart1_query = "SELECT rh.rating, DATE_FORMAT(rh.recorded_at, '%d %b %Y') as da
                  FROM rating_history rh
                  JOIN user_handles uh ON rh.user_handle_id = uh.id
                  JOIN platforms pl ON uh.platform_id = pl.id
-                 WHERE uh.user_id = $user_id ORDER BY rh.recorded_at ASC";
+                 WHERE uh.user_id = $user_id ORDER BY rh.recorded_at DESC LIMIT 200";
 $chart1_res = mysqli_query($conn, $chart1_query);
 $c1_labels = []; $c1_data = [];
 while ($row = mysqli_fetch_assoc($chart1_res)) {
     $c1_labels[] = $row['date_val'] . ' (' . $row['platform_name'] . ')';
     $c1_data[] = $row['rating'];
 }
+$c1_labels = array_reverse($c1_labels);
+$c1_data = array_reverse($c1_data);
 
 // Chart 2: Solved Difficulty Trend (Based on solved date)
 $chart2_query = "SELECT p.equivalent_rating, DATE_FORMAT(s.solved_at, '%d %b %Y') as date_val 
                  FROM solved_problems s
                  JOIN problems p ON s.problem_id = p.id
-                 WHERE s.user_id = $user_id ORDER BY s.solved_at ASC LIMIT 30";
+                 WHERE s.user_id = $user_id ORDER BY s.solved_at DESC LIMIT 200";
 $chart2_res = mysqli_query($conn, $chart2_query);
 $c2_labels = []; $c2_data = [];
 while ($row = mysqli_fetch_assoc($chart2_res)) {
     $c2_labels[] = $row['date_val'];
     $c2_data[] = $row['equivalent_rating'];
 }
+$c2_labels = array_reverse($c2_labels);
+$c2_data = array_reverse($c2_data);
 ?>
 
 <?php
@@ -146,7 +150,8 @@ require_once 'includes/nav_dashboard.php';
         <section class="profile-banner">
             <div class="profile-content d-flex w-full align-center gap-lg">
                 <div class="profile-avatar" style="display: flex; align-items: center; justify-content: center;">
-                    <?php echo !empty($profile_pic) ? '<img src="' . htmlspecialchars($profile_pic) . '" alt="Profile Avatar">' : strtoupper(substr($user_display_name, 0, 1)); ?>
+                    <?php echo !empty($profile_pic) ? '<img src="' . htmlspecialchars($profile_pic) . 
+                    '" alt="Profile Avatar">' : strtoupper(substr($user_display_name, 0, 1)); ?>
                 </div>
                 <div class="profile-info">
                     <h2><?php echo htmlspecialchars($user_display_name); ?></h2>
@@ -201,17 +206,26 @@ require_once 'includes/nav_dashboard.php';
             </div>
         </section>
 
+<?php
+// Calculate dynamic widths for charts to enable scrolling when there are many data points
+$c1_min_width = max(100, count($c1_labels) * 40); // 40px per data point
+$c2_min_width = max(100, count($c2_labels) * 40);
+?>
         <section class="dashboard-grid mb-lg">
             <div class="card card-hover">
                 <h3>Contest Rating Chart (Relative)</h3>
-                <div class="chart-container">
-                    <canvas id="contestChart" data-labels="<?php echo htmlspecialchars(json_encode($c1_labels), ENT_QUOTES, 'UTF-8'); ?>" data-values="<?php echo htmlspecialchars(json_encode($c1_data), ENT_QUOTES, 'UTF-8'); ?>"></canvas>
+                <div class="chart-scroll-wrapper" style="overflow-x: auto; overflow-y: hidden; width: 100%;">
+                    <div class="chart-container" style="min-width: <?php echo $c1_min_width; ?>px; height: 300px; position: relative;">
+                        <canvas id="contestChart" data-labels="<?php echo htmlspecialchars(json_encode($c1_labels), ENT_QUOTES, 'UTF-8'); ?>" data-values="<?php echo htmlspecialchars(json_encode($c1_data), ENT_QUOTES, 'UTF-8'); ?>"></canvas>
+                    </div>
                 </div>
             </div>
             <div class="card card-hover">
                 <h3>Solved Difficulty Trend</h3>
-                <div class="chart-container">
-                    <canvas id="solvedChart" data-labels="<?php echo htmlspecialchars(json_encode($c2_labels), ENT_QUOTES, 'UTF-8'); ?>" data-values="<?php echo htmlspecialchars(json_encode($c2_data), ENT_QUOTES, 'UTF-8'); ?>"></canvas>
+                <div class="chart-scroll-wrapper" style="overflow-x: auto; overflow-y: hidden; width: 100%;">
+                    <div class="chart-container" style="min-width: <?php echo $c2_min_width; ?>px; height: 300px; position: relative;">
+                        <canvas id="solvedChart" data-labels="<?php echo htmlspecialchars(json_encode($c2_labels), ENT_QUOTES, 'UTF-8'); ?>" data-values="<?php echo htmlspecialchars(json_encode($c2_data), ENT_QUOTES, 'UTF-8'); ?>"></canvas>
+                    </div>
                 </div>
             </div>
         </section>

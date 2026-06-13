@@ -29,8 +29,20 @@ function sync_platform($user_id, $platform_id, $handle_username, $conn) {
                     $handle_id = mysqli_insert_id($conn);
                 }
 
-                $history_query = "INSERT INTO rating_history (user_handle_id, rating) VALUES ($handle_id, $current_rating)";
-                mysqli_query($conn, $history_query);
+                $last_rating_query = "SELECT rating FROM rating_history WHERE user_handle_id = $handle_id ORDER BY recorded_at DESC LIMIT 1";
+                $last_rating_res = mysqli_query($conn, $last_rating_query);
+                $should_insert_rating = true;
+                if (mysqli_num_rows($last_rating_res) > 0) {
+                    $last_rating_row = mysqli_fetch_assoc($last_rating_res);
+                    if ($last_rating_row['rating'] == $current_rating) {
+                        $should_insert_rating = false;
+                    }
+                }
+                
+                if ($should_insert_rating) {
+                    $history_query = "INSERT INTO rating_history (user_handle_id, rating) VALUES ($handle_id, $current_rating)";
+                    mysqli_query($conn, $history_query);
+                }
                 
                 $status_url = "https://codeforces.com/api/user.status?handle=" . urlencode($handle_username) . "&from=1&count=50";
                 $res_status = http_get_request($status_url);
@@ -124,8 +136,20 @@ function sync_platform($user_id, $platform_id, $handle_username, $conn) {
                 }
 
                 if ($contest_rating > 0) {
-                    $history_query = "INSERT INTO rating_history (user_handle_id, rating) VALUES ($handle_id, $contest_rating)";
-                    mysqli_query($conn, $history_query);
+                    $last_rating_query = "SELECT rating FROM rating_history WHERE user_handle_id = $handle_id ORDER BY recorded_at DESC LIMIT 1";
+                    $last_rating_res = mysqli_query($conn, $last_rating_query);
+                    $should_insert_rating = true;
+                    if (mysqli_num_rows($last_rating_res) > 0) {
+                        $last_rating_row = mysqli_fetch_assoc($last_rating_res);
+                        if ($last_rating_row['rating'] == $contest_rating) {
+                            $should_insert_rating = false;
+                        }
+                    }
+                    
+                    if ($should_insert_rating) {
+                        $history_query = "INSERT INTO rating_history (user_handle_id, rating) VALUES ($handle_id, $contest_rating)";
+                        mysqli_query($conn, $history_query);
+                    }
                 }
 
                 foreach ($subs_data['submission'] as $submission) {
