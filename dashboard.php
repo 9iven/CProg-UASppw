@@ -108,7 +108,7 @@ $solved_result = mysqli_query($conn, $solved_query);
 // --- 5. EXTRACT DATA FOR VISUALIZATION GRAPH (CHART.JS) ---
 
 // Chart 1: Contest Rating History (Relative to recording time)
-$chart1_query = "SELECT rh.rating, DATE_FORMAT(rh.recorded_at, '%d %b') as date_val, pl.name as platform_name 
+$chart1_query = "SELECT rh.rating, DATE_FORMAT(rh.recorded_at, '%d %b %Y') as date_val, pl.name as platform_name 
                  FROM rating_history rh
                  JOIN user_handles uh ON rh.user_handle_id = uh.id
                  JOIN platforms pl ON uh.platform_id = pl.id
@@ -121,7 +121,7 @@ while ($row = mysqli_fetch_assoc($chart1_res)) {
 }
 
 // Chart 2: Solved Difficulty Trend (Based on solved date)
-$chart2_query = "SELECT p.equivalent_rating, DATE_FORMAT(s.solved_at, '%d %b') as date_val 
+$chart2_query = "SELECT p.equivalent_rating, DATE_FORMAT(s.solved_at, '%d %b %Y') as date_val 
                  FROM solved_problems s
                  JOIN problems p ON s.problem_id = p.id
                  WHERE s.user_id = $user_id ORDER BY s.solved_at ASC LIMIT 30";
