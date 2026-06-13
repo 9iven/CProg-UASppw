@@ -11,7 +11,7 @@ require_once 'includes/head.php';
 
         <!-- Headline & Subtitle (Clear Value Proposition) -->
         <h1 class="hero-title">
-            Merge and Improve Faster in <span class="text-accent-cyan">Competitive Programming</span>
+            Merge and Progress Faster in <span class="text-accent-cyan">Competitive Programming</span>
         </h1>
         <p class="hero-subtitle">
             An analytics tool for competitive programmers. Connect your accounts to analyze your solve history, visualize rating trends, and get personalized problem recommendations tailored to your exact capabilities.

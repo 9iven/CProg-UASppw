@@ -145,12 +145,8 @@ require_once 'includes/nav_dashboard.php';
         
         <section class="profile-banner">
             <div class="profile-content d-flex w-full align-center gap-lg">
-                <div class="profile-avatar">
-                    <?php if (!empty($profile_pic)): ?>
-                        <img src="<?php echo htmlspecialchars($profile_pic); ?>" alt="Profile Avatar">
-                    <?php else: ?>
-                        <?php echo strtoupper(substr($user_display_name, 0, 1)); ?>
-                    <?php endif; ?>
+                <div class="profile-avatar" style="display: flex; align-items: center; justify-content: center;">
+                    <?php echo !empty($profile_pic) ? '<img src="' . htmlspecialchars($profile_pic) . '" alt="Profile Avatar">' : strtoupper(substr($user_display_name, 0, 1)); ?>
                 </div>
                 <div class="profile-info">
                     <h2><?php echo htmlspecialchars($user_display_name); ?></h2>
