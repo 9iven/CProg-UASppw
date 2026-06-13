@@ -3,7 +3,6 @@
 A unified competitive programming dashboard that aggregates your problem-solving history and contest ratings across multiple platforms (Codeforces, LeetCode, AtCoder, etc.) into a single, standardized rating scale.
 
 ![Hero Banner / Main Dashboard Screenshot](assets/img/placeholders/hero_banner.png)  
-*(Note: Replace the image path above with a screenshot of your main dashboard)*
 
 ## Features
 
@@ -71,7 +70,6 @@ http://localhost/CProg-Tracker
 
 ### Manual Problem Entry
 ![Manual Entry Modal](assets/img/placeholders/manual_entry.png)
-
 ---
 
 ## Usage Guide
