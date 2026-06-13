@@ -429,7 +429,7 @@ require_once 'includes/nav_dashboard.php';
             <span class="close-modal" id="closeChartModal">&times;</span>
             <div class="d-flex justify-between align-center mb-md">
                 <h2 id="chartModalTitle">Chart View</h2>
-                <div class="chart-nav">
+                <div class="chart-nav" style="margin-right: 45px;">
                     <button class="btn btn-sm btn-secondary" id="modal-prev" title="Older">&larr;</button>
                     <button class="btn btn-sm btn-secondary" id="modal-next" title="Newer" disabled>&rarr;</button>
                 </div>

@@ -237,13 +237,16 @@ document.addEventListener("DOMContentLoaded", function() {
             const newNext = nextBtn.cloneNode(true);
             prevBtn.parentNode.replaceChild(newPrev, prevBtn);
             nextBtn.parentNode.replaceChild(newNext, nextBtn);
+            
+            prevBtn = newPrev;
+            nextBtn = newNext;
 
-            newPrev.addEventListener('click', () => {
+            prevBtn.addEventListener('click', () => {
                 modalCurrentIndex = Math.max(0, modalCurrentIndex - modalWindowSize);
                 updateModalChart();
             });
             
-            newNext.addEventListener('click', () => {
+            nextBtn.addEventListener('click', () => {
                 modalCurrentIndex = Math.min(allLabels.length - modalWindowSize, modalCurrentIndex + modalWindowSize);
                 updateModalChart();
             });
