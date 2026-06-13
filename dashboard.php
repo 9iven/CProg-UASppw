@@ -33,16 +33,20 @@ $modal_platforms_result = mysqli_query($conn, "SELECT id, name FROM platforms OR
 $user_display_name = explode('@', $email)[0]; // Fallback user display name from email
 $profile_pic = null;
 
-// Query profile picture
-$meta_res = mysqli_query($conn, "SELECT profile_picture FROM users WHERE id = $user_id");
+// Query profile metadata
+$meta_res = mysqli_query($conn, "SELECT profile_picture, display_name FROM users WHERE id = $user_id");
 if (mysqli_num_rows($meta_res) > 0) {
-    $profile_pic = mysqli_fetch_assoc($meta_res)['profile_picture'];
-}
-
-// Use the first registered platform handle/username as the primary display name
-$handles_res = mysqli_query($conn, "SELECT username FROM user_handles WHERE user_id = $user_id LIMIT 1");
-if (mysqli_num_rows($handles_res) > 0) {
-    $user_display_name = mysqli_fetch_assoc($handles_res)['username'];
+    $row = mysqli_fetch_assoc($meta_res);
+    $profile_pic = $row['profile_picture'];
+    if (!empty($row['display_name'])) {
+        $user_display_name = $row['display_name'];
+    } else {
+        // Fallback: Use the first registered platform handle/username
+        $handles_res = mysqli_query($conn, "SELECT username FROM user_handles WHERE user_id = $user_id LIMIT 1");
+        if (mysqli_num_rows($handles_res) > 0) {
+            $user_display_name = mysqli_fetch_assoc($handles_res)['username'];
+        }
+    }
 }
 
 // Retrieve all synced handles for the user profile header links

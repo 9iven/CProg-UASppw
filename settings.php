@@ -13,22 +13,33 @@ $message = '';
 // --- PROCESS POST ACTIONS (Upload Avatar & Delete Handle) ---
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     
-    // ACTION 1: Upload Profile Picture (Avatar)
-    if (isset($_POST['action']) && $_POST['action'] == 'upload_avatar') {
+    // ACTION 1: Update Profile (Avatar & Username)
+    if (isset($_POST['action']) && $_POST['action'] == 'update_profile') {
+        $new_name = mysqli_real_escape_string($conn, trim($_POST['display_name']));
+        
+        $update_parts = [];
+        if (!empty($new_name)) {
+            $update_parts[] = "display_name = '$new_name'";
+        }
+
         if (isset($_FILES['profile_picture']) && $_FILES['profile_picture']['error'] == 0) {
-            // Get file extension (e.g. jpg, png)
             $ext = pathinfo($_FILES['profile_picture']['name'], PATHINFO_EXTENSION);
-            // Create a unique filename using user ID and current timestamp
             $filename = "avatar_" . $user_id . "_" . time() . "." . $ext;
             $destination = "uploads/avatars/" . $filename;
             
-            // Move file from temporary folder to uploads folder
             if (move_uploaded_file($_FILES['profile_picture']['tmp_name'], $destination)) {
-                // Save picture file path to database
-                mysqli_query($conn, "UPDATE users SET profile_picture = '$destination' WHERE id = $user_id");
-                $message = "<div class='alert alert-success'>Profile picture successfully updated!</div>";
+                $update_parts[] = "profile_picture = '$destination'";
             } else {
-                $message = "<div class='alert alert-error'>Failed to move file to server. Please try again.</div>";
+                $message .= "<div class='alert alert-error'>Failed to move file to server. Please try again.</div>";
+            }
+        }
+
+        if (!empty($update_parts)) {
+            $update_sql = "UPDATE users SET " . implode(", ", $update_parts) . " WHERE id = $user_id";
+            if (mysqli_query($conn, $update_sql)) {
+                $message .= "<div class='alert alert-success'>Profile successfully updated!</div>";
+            } else {
+                $message .= "<div class='alert alert-error'>Database error occurred while updating.</div>";
             }
         }
     }
@@ -60,6 +71,14 @@ $handles_query = "SELECT uh.id as handle_id, uh.platform_id, uh.username, pl.nam
                   JOIN platforms pl ON uh.platform_id = pl.id 
                   WHERE uh.user_id = $user_id";
 $handles_result = mysqli_query($conn, $handles_query);
+
+// Retrieve current display name
+$user_info_query = "SELECT display_name FROM users WHERE id = $user_id";
+$user_info_result = mysqli_query($conn, $user_info_query);
+$current_display_name = "";
+if (mysqli_num_rows($user_info_result) > 0) {
+    $current_display_name = mysqli_fetch_assoc($user_info_result)['display_name'];
+}
 ?>
 
 <?php
@@ -88,10 +107,14 @@ require_once 'includes/nav_dashboard.php';
                 <p class="text-muted text-sm mb-md block">Upload your <em>profile picture</em>. This image will represent your identity on the <em>dashboard</em> page.</p>
                 
                 <form action="settings.php" method="POST" enctype="multipart/form-data">
-                    <input type="hidden" name="action" value="upload_avatar">
+                    <input type="hidden" name="action" value="update_profile">
                     <div class="form-group">
-                        <label>Choose Image File</label>
-                        <input type="file" name="profile_picture" class="form-control" accept="image/*" required>
+                        <label>Display Name (Username)</label>
+                        <input type="text" name="display_name" class="form-control" placeholder="Enter your display name" value="<?php echo htmlspecialchars($current_display_name); ?>">
+                    </div>
+                    <div class="form-group">
+                        <label>Choose Image File (Optional)</label>
+                        <input type="file" name="profile_picture" class="form-control" accept="image/*">
                     </div>
                     <button type="submit" class="btn btn-accent btn-md">Save Profile</button>
                 </form>
