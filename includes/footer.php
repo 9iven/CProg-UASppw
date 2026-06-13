@@ -10,6 +10,8 @@ if (!$no_footer):
             <span class="footer-divider">|</span>
             <a href="#" class="footer-modal-trigger" data-type="guide">How to Use</a>
             <span class="footer-divider">|</span>
+            <a href="about.php">About Project</a>
+            <span class="footer-divider">|</span>
             <a href="https://github.com/9iven/CProg-UASppw" target="_blank">GitHub Repository</a>
         </div>
         <div class="footer-copyright">
