@@ -265,13 +265,49 @@ require_once 'includes/nav_dashboard.php';
                 <?php endif; ?>
  
                 <?php if ($total_solved_pages > 1): ?>
-                <div class="pagination-container d-flex justify-center gap-sm">
-                    <?php for($i = 1; $i <= $total_solved_pages; $i++): ?>
+                <div class="pagination-container d-flex justify-center align-center gap-sm flex-wrap">
+                    <?php if ($page_solved > 1): ?>
+                        <a href="?page_solved=1&search_solved=<?php echo urlencode($search_solved); ?>#solve-activity" class="pagination-link" title="First Page">&laquo; First</a>
+                        <a id="pagination-prev" href="?page_solved=<?php echo $page_solved - 1; ?>&search_solved=<?php echo urlencode($search_solved); ?>#solve-activity" class="pagination-link" title="Previous Page">&lsaquo; Prev</a>
+                    <?php endif; ?>
+
+                    <?php
+                    $range = 2;
+                    $start_page = max(1, $page_solved - $range);
+                    $end_page = min($total_solved_pages, $page_solved + $range);
+
+                    if ($start_page > 1): ?>
+                        <a href="?page_solved=1&search_solved=<?php echo urlencode($search_solved); ?>#solve-activity" class="pagination-link">1</a>
+                        <?php if ($start_page > 2): ?>
+                            <span class="pagination-ellipsis text-muted">...</span>
+                        <?php endif; ?>
+                    <?php endif; ?>
+
+                    <?php for ($i = $start_page; $i <= $end_page; $i++): ?>
                         <a href="?page_solved=<?php echo $i; ?>&search_solved=<?php echo urlencode($search_solved); ?>#solve-activity" 
                            class="pagination-link <?php echo ($i == $page_solved) ? 'active' : ''; ?>">
                             <?php echo $i; ?>
                         </a>
                     <?php endfor; ?>
+
+                    <?php if ($end_page < $total_solved_pages): ?>
+                        <?php if ($end_page < $total_solved_pages - 1): ?>
+                            <span class="pagination-ellipsis text-muted">...</span>
+                        <?php endif; ?>
+                        <a href="?page_solved=<?php echo $total_solved_pages; ?>&search_solved=<?php echo urlencode($search_solved); ?>#solve-activity" class="pagination-link"><?php echo $total_solved_pages; ?></a>
+                    <?php endif; ?>
+
+                    <?php if ($page_solved < $total_solved_pages): ?>
+                        <a id="pagination-next" href="?page_solved=<?php echo $page_solved + 1; ?>&search_solved=<?php echo urlencode($search_solved); ?>#solve-activity" class="pagination-link" title="Next Page">Next &rsaquo;</a>
+                        <a href="?page_solved=<?php echo $total_solved_pages; ?>&search_solved=<?php echo urlencode($search_solved); ?>#solve-activity" class="pagination-link" title="Last Page">Last &raquo;</a>
+                    <?php endif; ?>
+
+                    <form action="dashboard.php" method="GET" class="pagination-jump-form d-flex align-center gap-xs">
+                        <input type="hidden" name="search_solved" value="<?php echo htmlspecialchars($search_solved); ?>">
+                        <label for="page_solved_input" class="text-sm text-muted">Go to:</label>
+                        <input type="number" id="page_solved_input" name="page_solved" class="form-control pagination-input" min="1" max="<?php echo $total_solved_pages; ?>" value="<?php echo $page_solved; ?>" required>
+                        <button type="submit" class="btn btn-secondary btn-sm" style="padding: 4px 10px;">Go</button>
+                    </form>
                 </div>
                 <?php endif; ?>
             </div>

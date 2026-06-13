@@ -302,4 +302,30 @@ document.addEventListener("DOMContentLoaded", function() {
         document.getElementById('titleFeedback'),
         document.getElementById('submitBtn')
     );
+
+    // 7. Keyboard navigation for pagination using ArrowLeft and ArrowRight keys
+    document.addEventListener("keydown", function(event) {
+        // Only trigger if focus is NOT on any input, textarea, or select elements
+        const active = document.activeElement;
+        if (active && (
+            active.tagName === 'INPUT' || 
+            active.tagName === 'TEXTAREA' || 
+            active.tagName === 'SELECT' || 
+            active.isContentEditable
+        )) {
+            return;
+        }
+
+        if (event.key === "ArrowLeft") {
+            const prevBtn = document.getElementById("pagination-prev");
+            if (prevBtn) {
+                prevBtn.click();
+            }
+        } else if (event.key === "ArrowRight") {
+            const nextBtn = document.getElementById("pagination-next");
+            if (nextBtn) {
+                nextBtn.click();
+            }
+        }
+    });
 });

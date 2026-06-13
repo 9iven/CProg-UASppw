@@ -111,3 +111,25 @@
     color: var(--color-text-muted);
     font-size: 0.9rem;
 }
+
+.pagination-ellipsis {
+    padding: 8px var(--space-xs);
+    font-size: 1rem;
+    user-select: none;
+}
+
+.pagination-jump-form {
+    margin-left: var(--space-sm);
+}
+
+.pagination-input {
+    width: 60px !important;
+    text-align: center;
+    padding: 6px 8px !important;
+    font-size: 0.9rem !important;
+    border-radius: var(--radius-xs) !important;
+    border: 1px solid var(--color-border-focus) !important;
+    background-color: var(--color-bg-inner) !important;
+    color: var(--color-text-primary) !important;
+}
+
