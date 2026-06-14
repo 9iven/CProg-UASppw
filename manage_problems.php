@@ -33,19 +33,35 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         
         // Proof Image Upload Logic
         $proof_path = 'NULL'; // Default if no file is uploaded
+        $upload_ok = true; // Flag to prevent DB insert if file is invalid
+        
         if (isset($_FILES['proof_image']) && $_FILES['proof_image']['error'] == 0) {
-            $ext = pathinfo($_FILES['proof_image']['name'], PATHINFO_EXTENSION);
-            // Give unique name using timestamp and user ID
-            $filename = "proof_" . time() . "_" . $user_id . "." . $ext;
-            $destination = "uploads/proofs/" . $filename;
+            $allowed_exts = ['jpg', 'jpeg', 'png', 'gif'];
+            $ext = strtolower(pathinfo($_FILES['proof_image']['name'], PATHINFO_EXTENSION));
+            $max_size = 5 * 1024 * 1024; // 5MB max for proofs
             
-            // Move temporary file to destination folder
-            if (move_uploaded_file($_FILES['proof_image']['tmp_name'], $destination)) {
-                $proof_path = "'" . mysqli_real_escape_string($conn, $destination) . "'";
+            if (!in_array($ext, $allowed_exts)) {
+                $message = "<div class='alert alert-error'>Invalid file format. Only JPG, PNG, and GIF are allowed.</div>";
+                $upload_ok = false;
+            } else if ($_FILES['proof_image']['size'] > $max_size) {
+                $message = "<div class='alert alert-error'>Proof image is too large. Maximum size is 5MB.</div>";
+                $upload_ok = false;
+            } else {
+                $filename = "proof_" . time() . "_" . $user_id . "." . $ext;
+                $destination = "uploads/proofs/" . $filename;
+                
+                if (move_uploaded_file($_FILES['proof_image']['tmp_name'], $destination)) {
+                    $proof_path = "'" . mysqli_real_escape_string($conn, $destination) . "'";
+                } else {
+                    $message = "<div class='alert alert-error'>Failed to upload proof image. Please try again.</div>";
+                    $upload_ok = false;
+                }
             }
         }
         
-        // Check duplicate problem URL to avoid double insert in the problems table
+        // Only proceed with database insert if upload was successful or empty
+        if ($upload_ok) {
+            // Check duplicate problem URL to avoid double insert in the problems table
         $check_dup = mysqli_query($conn, "SELECT id FROM problems WHERE problem_url = '$problem_url'");
         if (mysqli_num_rows($check_dup) > 0) {
             // Problem already exists in DB, just link it to user's history
@@ -76,6 +92,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             } else {
                 $message = "<div class='alert alert-error'>Failed to save problem to database: " . mysqli_error($conn) . "</div>";
             }
+        }
         }
     } 
     

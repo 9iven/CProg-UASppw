@@ -22,14 +22,23 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
 
         if (isset($_FILES['profile_picture']) && $_FILES['profile_picture']['error'] == 0) {
-            $ext = pathinfo($_FILES['profile_picture']['name'], PATHINFO_EXTENSION);
-            $filename = "avatar_" . $user_id . "_" . time() . "." . $ext;
-            $destination = "uploads/avatars/" . $filename;
+            $allowed_exts = ['jpg', 'jpeg', 'png', 'gif'];
+            $ext = strtolower(pathinfo($_FILES['profile_picture']['name'], PATHINFO_EXTENSION));
+            $max_size = 2 * 1024 * 1024; // 2MB max
             
-            if (move_uploaded_file($_FILES['profile_picture']['tmp_name'], $destination)) {
-                $update_parts[] = "profile_picture = '$destination'";
+            if (!in_array($ext, $allowed_exts)) {
+                $message .= "<div class='alert alert-error'>Invalid file format. Only JPG, PNG, and GIF are allowed.</div>";
+            } else if ($_FILES['profile_picture']['size'] > $max_size) {
+                $message .= "<div class='alert alert-error'>File is too large. Maximum size is 2MB.</div>";
             } else {
-                $message .= "<div class='alert alert-error'>Failed to move file to server. Please try again.</div>";
+                $filename = "avatar_" . $user_id . "_" . time() . "." . $ext;
+                $destination = "uploads/avatars/" . $filename;
+                
+                if (move_uploaded_file($_FILES['profile_picture']['tmp_name'], $destination)) {
+                    $update_parts[] = "profile_picture = '$destination'";
+                } else {
+                    $message .= "<div class='alert alert-error'>Failed to move file to server. Please try again.</div>";
+                }
             }
         }
 
